@@ -1,0 +1,5 @@
+Filename,Runtime in ms,Peak Memory Usage in kb,Output,Expected Solution,Correct
+2024/1/human.py,26.3,10000.0,"[1722302, 20373490]","[1722302, 20373490]",YES
+2024/1/DeepSeek/deepseek_r1.py,26.0,9946.7,"[1722302, 20373490]","[1722302, 20373490]",YES
+2024/1/OpenAI/o4_mini.py,29.3,10384.0,"[1722302, 20373490]","[1722302, 20373490]",YES
+2024/1/OpenAI/o3_mini.py,38.1,12208.0,"[1722302, 20373490]","[1722302, 20373490]",YES
