@@ -57,7 +57,7 @@ def evaluate_code_multiple_times(path, input_data, runs=3):
         run_times.append(run_time_ms)
         mem_usages.append(used_max_mem_kb)
         if error_output:
-            print(f"Fehler in {path}:\n{error_output}\n")
+            print(f"Error in {path}:\n{error_output}\n")
             error_happened = True
             error_message = error_output
             break
