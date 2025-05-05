@@ -33,28 +33,42 @@ def evaluate_code(path, input_file_path):
 
     end_time = time.time()
 
-    stdout, _ = proc.communicate()
+    stdout, stderr = proc.communicate()
     run_time_ms = (end_time - start_time) * 1000
     used_max_mem_kb = used_max_mem / 1024
 
     output = stdout.decode("utf-8").strip()
+    error_output = stderr.decode("utf-8").strip()
 
-    return run_time_ms, used_max_mem_kb, output
+    return run_time_ms, used_max_mem_kb, output, error_output
 
 
 def evaluate_code_multiple_times(path, input_data, runs=3):
     run_times = []
     mem_usages = []
     output = None
+    error_happened = False
+    error_message = ""
     for i in range(runs):
-        run_time_ms, used_max_mem_kb, out = evaluate_code(path, input_data)
+        run_time_ms, used_max_mem_kb, out, error_output = evaluate_code(
+            path, input_data
+        )
         run_times.append(run_time_ms)
         mem_usages.append(used_max_mem_kb)
+        if error_output:
+            print(f"Fehler in {path}:\n{error_output}\n")
+            error_happened = True
+            error_message = error_output
+            break
+
         if i == 0:
             output = out
     avg_run_time = sum(run_times) / len(run_times)
     avg_mem_usage = sum(mem_usages) / len(mem_usages)
-    return f"{avg_run_time:.1f}", f"{avg_mem_usage:.1f}", output
+    if error_happened:
+        return f"{avg_run_time:.1f}", f"{avg_mem_usage:.1f}", "ERROR", error_message
+    else:
+        return f"{avg_run_time:.1f}", f"{avg_mem_usage:.1f}", output, ""
 
 
 def write_results_to_csv(rows):
@@ -65,6 +79,7 @@ def write_results_to_csv(rows):
         "Output",
         "Expected Solution",
         "Correct",
+        "Error Message",
     ]
     with open("./results.csv", "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
@@ -89,6 +104,7 @@ def get_input_and_solution_paths(py_file):
     return input_path, solution_path
 
 
+
 def main():
     results = []
     for file_path in find_python_files("../project_root"):
@@ -99,11 +115,11 @@ def main():
 
         expected_solution = read_file(solution_path)
 
-        run_time, avg_mem_usage, output = evaluate_code_multiple_times(
-            file_path, input_path, runs=3
+        run_time, avg_mem_usage, output, error_message = evaluate_code_multiple_times(
+            file_path, input_path, runs=10
         )
 
-        correct = output == expected_solution
+        correct = output == expected_solution and not error_message
 
         results.append(
             [
@@ -113,10 +129,10 @@ def main():
                 output,
                 expected_solution,
                 "YES" if correct else "NO",
+                error_message,
             ]
         )
     write_results_to_csv(results)
-
 
 if __name__ == "__main__":
     main()
