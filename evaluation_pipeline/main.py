@@ -49,6 +49,7 @@ def evaluate_code_multiple_times(path, input_data, runs=3):
     output = None
     error_happened = False
     error_message = ""
+    print(f"Testing file {path}")
     for i in range(runs):
         run_time_ms, used_max_mem_kb, out, error_output = evaluate_code(
             path, input_data
@@ -104,7 +105,6 @@ def get_input_and_solution_paths(py_file):
     return input_path, solution_path
 
 
-
 def main():
     results = []
     for file_path in find_python_files("../project_root"):
@@ -133,6 +133,7 @@ def main():
             ]
         )
     write_results_to_csv(results)
+
 
 if __name__ == "__main__":
     main()

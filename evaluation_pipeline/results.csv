@@ -1,6 +1,6 @@
 Filename,Runtime in ms,Peak Memory Usage in kb,Output,Expected Solution,Correct,Error Message
-2024/1/human.py,36.1,11579.2,"[1722302, 20373490]","[1722302, 20373490]",YES,
-2024/2/human.py,35.9,12992.0,ERROR,"[1722302, 20373490]",NO,"Traceback (most recent call last):
+2024/1/human.py,36.4,11480.0,"[1722302, 20373490]","[1722302, 20373490]",YES,
+2024/2/human.py,36.1,13056.0,ERROR,"[1722302, 20373490]",NO,"Traceback (most recent call last):
   File ""/Users/silasreiling/Documents/uni/LLMCodeBench/evaluation_pipeline/../project_root/2024/2/human.py"", line 37, in <module>
     sys.stdout.write(f""{part1(data)}\n{part2(data)}\n"")
                         ~~~~~^^^^^^
@@ -8,6 +8,6 @@ Filename,Runtime in ms,Peak Memory Usage in kb,Output,Expected Solution,Correct,
     curr_sum += int(d)
                 ~~~^^^
 ValueError: invalid literal for int() with base 10: '16435   48069'"
-2024/1/DeepSeek/deepseek_r1.py,35.3,11337.6,"[1722302, 20373490]","[1722302, 20373490]",YES,
-2024/1/OpenAI/o4_mini.py,31.7,10412.8,"[1722302, 20373490]","[1722302, 20373490]",YES,
-2024/1/OpenAI/o3_mini.py,29.4,9888.0,"[1722302, 20373490]","[1722302, 20373490]",YES,
+2024/1/DeepSeek/deepseek_r1.py,28.4,9752.0,"[1722302, 20373490]","[1722302, 20373490]",YES,
+2024/1/OpenAI/o4_mini.py,34.2,11060.8,"[1722302, 20373490]","[1722302, 20373490]",YES,
+2024/1/OpenAI/o3_mini.py,37.5,12028.8,"[1722302, 20373490]","[1722302, 20373490]",YES,
