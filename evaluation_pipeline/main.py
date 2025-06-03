@@ -69,7 +69,7 @@ def evaluate_code_multiple_times(path, input_data, runs=3):
     if error_happened:
         return f"{avg_run_time:.1f}", f"{avg_mem_usage:.1f}", "ERROR", error_message
     else:
-        return f"{avg_run_time:.1f}", f"{avg_mem_usage:.1f}", output, ""
+        return f"{avg_run_time:.1f}", f"{avg_mem_usage:.0f}", output, ""
 
 
 def write_results_to_csv(rows):
@@ -106,6 +106,7 @@ def get_input_and_solution_paths(py_file):
 
 
 def main():
+    print("Starting evaluation")
     results = []
     for file_path in find_python_files("../project_root"):
         input_path, solution_path = get_input_and_solution_paths(file_path)
@@ -116,7 +117,7 @@ def main():
         expected_solution = read_file(solution_path)
 
         run_time, avg_mem_usage, output, error_message = evaluate_code_multiple_times(
-            file_path, input_path, runs=10
+            file_path, input_path, runs=2
         )
 
         correct = output == expected_solution and not error_message
@@ -135,5 +136,29 @@ def main():
     write_results_to_csv(results)
 
 
+def sort_csv_by_filename(csv_path):
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = list(csv.reader(f))
+        header = reader[0]
+        rows = reader[1:]
+
+    def sort_key(row):
+        filename = row[0]
+        parts = filename.split("/")
+        year = int(parts[0])
+        day = int(parts[1])
+        rest = "/".join(parts[2:])
+        return (year, day, rest)
+
+    rows.sort(key=sort_key)
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(rows)
+
+
 if __name__ == "__main__":
     main()
+    sort_csv_by_filename("./results.csv")
+    print("finished, results stored in ./results.csv")
