@@ -1,8 +1,12 @@
 import requests
 import os
+from dotenv import load_dotenv
 
 # Advent of Code session cookie
-session_cookie = '53616c7465645f5fed002aea8dff635d19946653e8e36bc79da907910969b3bc4378ff7d78e73ae266d7d14ff084bb62f6383935c952c5d415bfafc6c9af886b'
+
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=env_path)
+session_cookie = os.getenv('SESSION_COOKIE')
 cookies = {'session': session_cookie}
 
 base_url = 'https://adventofcode.com/{year}/day/{day}/input'
@@ -18,7 +22,7 @@ if "Please log in" in test_response.text or test_response.status_code != 200:
 else:
     print("Login successful.")
 
-for year in range(14, 25):
+for year in range(15, 25):
     full_year = 2000 + year
     year_url = base_url.format(year=full_year, day=1)
     response = requests.get(year_url, cookies=cookies)
@@ -32,7 +36,7 @@ for year in range(14, 25):
     saved_days = []
     failed_days = []
 
-    for day in range(1, 32):
+    for day in range(1, 25):
         url = base_url.format(year=full_year, day=day)
         response = requests.get(url, cookies=cookies)
 
@@ -40,10 +44,10 @@ for year in range(14, 25):
             failed_days.append(day)
             continue
 
-        folder_path = os.path.join(project_root, str(full_year), f'challenge{day:02d}')
+        folder_path = os.path.join(project_root, str(full_year), f'{day}')
         os.makedirs(folder_path, exist_ok=True)
 
-        file_path = os.path.join(folder_path, 'inputs')
+        file_path = os.path.join(folder_path, 'input')
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(response.text.strip())
 
