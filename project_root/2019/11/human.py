@@ -69,7 +69,6 @@ def part1(data):
   direction, x, y = 0, 0, 0
   colors = defaultdict(int)
   inputs = [0]
-  inputs = inputs[::-1]
   runner = runComputer(data, inputs)
 
   while True:
