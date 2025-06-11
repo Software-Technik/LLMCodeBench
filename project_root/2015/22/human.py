@@ -3,15 +3,11 @@ from copy import deepcopy
 
 def part1(data):
     player, boss, spells = get_game_data(data)
-    costs = None
-    play(player, boss, {}, 0, spells,  True)
-    return costs
+    return play(player, boss, {}, 0, spells, True)
 
 def part2(data):
     player, boss, spells = get_game_data(data)
-    costs = None
-    play(player, boss, {}, 0, spells, True, True)
-    return costs
+    return play(player, boss, {}, 0, spells, True, True)
 
 def get_game_data(data):
     player = {
@@ -33,7 +29,10 @@ def get_game_data(data):
     return player, boss, spells
 
 
-def play(player, boss, active_spells, spent_mana, spells, player_turn=True, part2=False):
+def play(player, boss, active_spells, spent_mana, spells, player_turn=True, part2=False, best_cost=None):
+    if best_cost is not None and spent_mana >= best_cost:
+        return best_cost
+
     active_spells_this_turn = deepcopy(active_spells)
     player_this_turn = deepcopy(player)
     boss_this_turn = deepcopy(boss)
@@ -41,7 +40,7 @@ def play(player, boss, active_spells, spent_mana, spells, player_turn=True, part
     if player_turn and part2:
         player_this_turn["hp"] -= 1
         if player_this_turn["hp"] <= 0:
-            return False
+            return best_cost
 
     for spell in active_spells_this_turn:
         player_this_turn["mana"] += active_spells_this_turn[spell]["heal_mana"]
@@ -49,43 +48,44 @@ def play(player, boss, active_spells, spent_mana, spells, player_turn=True, part
         boss_this_turn["hp"] -= active_spells_this_turn[spell]["damage"]
         active_spells_this_turn[spell]["turns"] -= 1
 
-    active_spells2_keys = list(active_spells_this_turn.keys())
-    for spell in active_spells2_keys:
-        if active_spells_this_turn[spell]["turns"] <= 0:
-            player_this_turn["armor"] -= active_spells_this_turn[spell]["armor"]
-            del active_spells_this_turn[spell]
+    expired = [s for s in active_spells_this_turn if active_spells_this_turn[s]["turns"] <= 0]
+    for s in expired:
+        player_this_turn["armor"] -= active_spells_this_turn[s]["armor"]
+        del active_spells_this_turn[s]
 
     if boss_this_turn["hp"] <= 0:
-        if costs is None or spent_mana < costs:
-            costs = spent_mana
-        return True
-
-    if costs is not None and spent_mana >= costs:
-        return False
+        return spent_mana if best_cost is None else min(best_cost, spent_mana)
 
     if player_turn:
         for spell in spells:
             if spell in active_spells_this_turn:
                 continue
-            else:
-                if spells[spell]["cost"] <= player_this_turn["mana"]:
-                    active_spells_next_turn = deepcopy(active_spells_this_turn)
-                    player_next_turn = deepcopy(player_this_turn)
+            if spells[spell]["cost"] > player_this_turn["mana"]:
+                continue
 
-                    player_next_turn["mana"] -= spells[spell]["cost"]
-                    player_next_turn["armor"] += spells[spell]["armor"]
-                    active_spells_next_turn[spell] = {
-                        "damage": spells[spell]["damage"],
-                        "armor": spells[spell]["armor"],
-                        "heal_hp": spells[spell]["heal_hp"],
-                        "heal_mana": spells[spell]["heal_mana"],
-                        "turns": spells[spell]["turns"],
-                    }
-                    play(player_next_turn, boss_this_turn, active_spells_next_turn, spent_mana + spells[spell]["cost"], False, part2)
+            new_active_spells = deepcopy(active_spells_this_turn)
+            new_player = deepcopy(player_this_turn)
+
+            new_player["mana"] -= spells[spell]["cost"]
+            new_player["armor"] += spells[spell]["armor"]
+            if spells[spell]["turns"] > 0:
+                new_active_spells[spell] = deepcopy(spells[spell])
+            else:
+                boss_copy = deepcopy(boss_this_turn)
+                boss_copy["hp"] -= spells[spell]["damage"]
+                new_player["hp"] += spells[spell]["heal_hp"]
+                best_cost = play(new_player, boss_copy, new_active_spells, spent_mana + spells[spell]["cost"], spells, False, part2, best_cost)
+                continue
+
+            best_cost = play(new_player, boss_this_turn, new_active_spells, spent_mana + spells[spell]["cost"], spells, False, part2, best_cost)
+        return best_cost
     else:
-        player_this_turn["hp"] -= max(1, boss_this_turn["damage"] - player_this_turn["armor"])
-        if player_this_turn["hp"] > 0:
-            play(player_this_turn, boss_this_turn, active_spells_this_turn, spent_mana, True, part2)
+        new_player = deepcopy(player_this_turn)
+        new_player["hp"] -= max(1, boss_this_turn["damage"] - new_player["armor"])
+        if new_player["hp"] > 0:
+            return play(new_player, boss_this_turn, active_spells_this_turn, spent_mana, spells, True, part2, best_cost)
+        return best_cost
+
 
 
 input_strings = sys.argv[1]
