@@ -1,6 +1,6 @@
+import io
 import sys
 from collections import defaultdict
-import io
 
 def runComputer(data, input):
   program = defaultdict(int, { k: v for k, v in enumerate(data) })
@@ -32,7 +32,7 @@ def runComputer(data, input):
     elif mode3 == 1: raise ValueError('Immediate mode invalid for param 3')
     elif mode3 == 2: p3 = program[i + 3] + relbase
 
-    #print('i =', i, '--- operation', opcode, '--- modes', mode1, mode2, mode3, '--- positions', str(p1).rjust(4, ' '), str(p2).rjust(4, ' '), str(p3).rjust(4, ' '))
+    # print('i =', i, '--- operation', opcode, '--- modes', mode1, mode2, mode3, '--- positions', str(p1).rjust(4, ' '), str(p2).rjust(4, ' '), str(p3).rjust(4, ' '))
 
     if opcode == 1: # addition
       program[p3] = program[p1] + program[p2]
@@ -85,7 +85,7 @@ def part1(data):
 
     inputs.append(colors[(x,y)])
 
-  return len(colors)
+  return len(colors) - 1
 
 def part2(data):
     direction, x, y = 0, 0, 0
@@ -165,4 +165,4 @@ inout_strings = sys.argv[1]
 with open(inout_strings) as f:
     data = list(map(int, f.read().splitlines()[0].split(",")))
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stdout.write(f"{part1(data)} {part2(data)}")
+sys.stdout.write(f"{part1(data.copy())} {part2(data.copy())}")
