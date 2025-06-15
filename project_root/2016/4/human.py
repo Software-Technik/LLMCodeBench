@@ -11,8 +11,8 @@ rooms = ((room[:-11].replace('-', ''),
 
 
 def find_most_common(name):
-    ranking = sorted((-name.count(letter), letter) for letter in set(name))
-    return ''.join(letter for _, letter in ranking[:5])
+    ranking = sorted((-name.count(letter), letter) for letter in set(name)) 
+    return ''.join(letter for _, letter in ranking[:5]) 
 
 
 def find_rooms():
