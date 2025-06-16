@@ -1,4 +1,3 @@
-import sys
 from hashlib import md5
 
 SALT = 'qzyelonm'
