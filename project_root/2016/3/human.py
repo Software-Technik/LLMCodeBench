@@ -1,3 +1,4 @@
+import sys
 from itertools import chain
 
 inout_strings = sys.argv[1]
