@@ -1,4 +1,3 @@
-import sys
 
 START = list(map(int, '01110110101001000'))
 DISK_1 = 272
