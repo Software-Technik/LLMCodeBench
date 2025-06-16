@@ -1,4 +1,3 @@
-import sys
 from collections import deque
 
 INPUT = 1364
