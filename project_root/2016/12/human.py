@@ -1,4 +1,3 @@
-import sys
 inout_strings = sys.argv[1]
 with open(inout_strings, 'r') as infile:
     instructions = infile.read().splitlines()
