@@ -1,3 +1,4 @@
+import sys
 def execute(a):
     inout_strings = sys.argv[1]
     with open(inout_strings, 'r') as infile:
