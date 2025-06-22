@@ -1,4 +1,4 @@
-advent_of_code_2016_python_day_19.py at master · narimiran_advent_of_code_2016import numpy as np
+import numpy as np
 
 INPUT = 3018458
 
