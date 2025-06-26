@@ -1,9 +1,0 @@
-python-dotenv
-requests
-numpy
-networkx
-z3
-scipy
-scikit-image
-pypng
-readchar
