@@ -4,9 +4,6 @@ from itertools import combinations
 
 
 def part1(grid):
-    with open("./day_08.in") as fin:
-        grid = fin.read().strip().split("\n")
-
     n = len(grid)
 
     def in_bounds(x, y):
@@ -40,6 +37,7 @@ def part1(grid):
 
     return len(antinodes)
 
+
 def part2(grid):
 
     n = len(grid)
@@ -50,7 +48,7 @@ def part2(grid):
     def get_antinodes(a, b):
         ax, ay = a
         bx, by = b
-        
+
         dx, dy = bx - ax, by - ay
 
         i = 0
@@ -60,7 +58,7 @@ def part2(grid):
             else:
                 break
             i += 1
-        
+
         i = 0
         while True:
             if in_bounds(bx + dx * i, by + dy * i):
@@ -68,7 +66,6 @@ def part2(grid):
             else:
                 break
             i += 1
-
 
     antinodes = set()
 
@@ -78,24 +75,23 @@ def part2(grid):
             if grid[i][j] != ".":
                 all_locs[grid[i][j]].append((i, j))
 
-
     for freq in all_locs:
         locs = all_locs[freq]
         for a, b in combinations(locs, r=2):
             for antinode in get_antinodes(a, b):
                 antinodes.add(antinode)
 
-
     for i in range(n):
         for j in range(n):
             if (i, j) in antinodes:
-                print("#", end="")
+                pass
+                # print("#", end="")
             else:
-                print(grid[i][j], end="")
-        print()
-
+                # print(grid[i][j], end="")
+                pass
 
     return len(antinodes)
+
 
 input_path = sys.argv[1]
 with open(input_path) as fin:
