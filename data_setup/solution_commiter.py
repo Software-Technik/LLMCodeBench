@@ -63,19 +63,8 @@ def submit_solution(year, day, level, answer):
 
         # Check for rate-limit message
         if ("You gave an answer too recently" in text) or ("please wait" in text):
-            # Extract wait time (minutes or seconds)
-            m_min = re.search(r"wait (\d+) minute", text)
-            m_sec = re.search(r"wait (\d+) second", text)
-            wait_time = 10  # default
-            if m_min:
-                wait_time = int(m_min.group(1)) * 60
-            elif m_sec:
-                wait_time = int(m_sec.group(1))
-            # Cap maximum wait to avoid excessive delays
-            wait_time = min(wait_time, 10 * 60)
-            print(
-                f"Rate limit hit on Day {day} Part {level}. Attempt {attempt}/{max_attempts}, waiting {wait_time} seconds."
-            )
+            wait_time = extract_wait_time_seconds(text)
+            print(f"Rate limit hit on Day {day} Part {level}. Attempt {attempt}/{max_attempts}, waiting {wait_time} seconds.")
             time.sleep(wait_time)
             continue
 
@@ -101,7 +90,29 @@ def submit_solution(year, day, level, answer):
     else:
         print(f"Verification failed with status code: {check_resp.status_code}")
 
+def extract_wait_time_seconds(text):
+    buffer = 3
+    wait_minutes = 0
+    wait_seconds = 0
+    
+    # regex für zahl + leerzeichen + minute/s|min/s |m
+    # regex für zahl + leerzeichen + second/s|sec/s |s
+    min_matches = re.findall(r"(\d+)\s*(?:minutes?|mins?|m)\b", text)
+    sec_matches = re.findall(r"(\d+)\s*(?:seconds?|secs?|s)\b", text)
 
+    if min_matches:
+        wait_minutes = max(map(int, min_matches)) 
+    if sec_matches:
+        wait_seconds = max(map(int, sec_matches))
+
+    # regex für mm:ss angaben
+    time_match = re.search(r"\b(\d{1,2}):(\d{2})\b", text)
+    if time_match:
+        wait_minutes = max(wait_minutes, int(time_match.group(1)))
+        wait_seconds = max(wait_seconds, int(time_match.group(2)))
+
+    return wait_minutes * 60 + wait_seconds + buffer
+    
 def main():
     root = Path(ROOT)
     solution_files = list(root.rglob("solution"))
