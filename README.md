@@ -1,28 +1,40 @@
 # LLMCodeBench
 
+## Projektkomponenten
 
-## Projekt komponenten
+### Data setup
 
-- **Evaluations daten**  
-  Alle soltuions zu den rätseln angepasst für die pipeline
+- **input_crawler**
+  Crawlt alle AoC Inputs und legt diese in die jeweiligen Ordner ab
 
-- **pipeline**  
-  Automatisierte Testpipeline zur Ausführung und Analyse der Code-Performance vor und nach der Optimierung.
+- **solution_generator**  
+  Generiert mit Hilfe der Inputs und human.py das entsprechende Solutionfile
+
+- **solution_comitter**  
+  Überprüft die erzeugten Solutions automatisiert auf ihre Korrektheit über AoC Webseite
 
 - **llm_controller**  
-  Modul zur Steuerung des LLMs für die Generierung von optimiertem Quellcode.
+  Erzeugt die KI Lösungen für die human.py Files
 
-- **advent-of-code-crawler**  
-  Web-Crawler zur Sammlung von den inputs für die rätsel
+- **code_syntax_checker**
+  Testet die KI Lösungen auf Syntax und Runtime Fehler und loggt diese
 
-- **solution_committer**  
-  Komponente um die lösungen zu validieren und abzuspeichern
+- **llm_error_fixer**  
+  Liest geloggte Syntaxerror ein und wiederholt die KI Generierung
+
+### Evaluation
+
+- **code-evaluation**
+  Testet sämtliche Codes in der project_root auf ihre Laufzeit und ihren RAM-Speicher und loggt die Ergebnisse
+
+- **result-evaluation**
+  Generiert automatisierte Analysen auf den erzeugten Evaluationsdaten
 
 # GitHub-Regelwerk für dieses Projekt
 
 ## 1. Arbeiten mit Feature-Branches
 
-- Jede*r arbeitet **in einem eigenen Branch**, z. B.:
+- Jede\*r arbeitet **in einem eigenen Branch**, z. B.:
   - `feature/web-crawler` (Kevin)
   - `feature/pipeline` (Silas)
 - Der `main`- oder `master`-Branch bleibt **stabil und sauber** – dort liegt nur getesteter und abgesprochener Code.
