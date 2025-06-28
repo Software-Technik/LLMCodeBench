@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import argparse
 
 INPUT_CRAWLER_PATH = "./input_crawler.py"
 CODE_SYNTAX_CHECKER_PATH = "./code_syntax_checker.py"
@@ -35,9 +36,18 @@ def run_solution_comitter():
     print("--- finished solution comitter ---")
 
 
-def llm_gen_and_validate():
+def llm_gen_and_validate(args):
     print("Running llm generator...")
-    subprocess.run([sys.executable, LLM_CONTROLLER_PATH])
+
+    flags = []
+    if args.ollama:
+        flags.append("-ollama")
+    if args.openai:
+        flags.append("-openai")
+    if args.deepseek:
+        flags.append("-deepseek")
+
+    subprocess.run([sys.executable, LLM_CONTROLLER_PATH] + flags)
 
     print("--- finished llm generator ---")
     print("Checking llm solutions for syntax error...")
@@ -45,17 +55,26 @@ def llm_gen_and_validate():
 
     for i in range(LLM_NUMBER_OF_RETRIES):
         print(f"--- Retry {i+1}/{LLM_NUMBER_OF_RETRIES} ---")
-        subprocess.run([sys.executable, LLM_ERROR_FIXER_PATH])
+        subprocess.run([sys.executable, LLM_ERROR_FIXER_PATH] + flags)
         print("Rechecking...")
         subprocess.run([sys.executable, CODE_SYNTAX_CHECKER_PATH])
 
 
-def main():
-    run_input_crawler()
-    run_solution_generator()
-    run_solution_comitter()
-    llm_gen_and_validate()
+def main(args):
+    if args.init:
+        run_input_crawler()
+        run_solution_generator()
+        run_solution_comitter()
+    
+    llm_gen_and_validate(args)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-init", action="store_true")
+    parser.add_argument("-ollama", action="store_true")
+    parser.add_argument("-openai", action="store_true")
+    parser.add_argument("-deepseek", action="store_true")
+    args = parser.parse_args()
+
+    main(args)
