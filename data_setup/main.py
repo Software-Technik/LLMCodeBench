@@ -41,11 +41,11 @@ def llm_gen_and_validate(args):
 
     flags = []
     if args.ollama:
-        flags.append("-ollama")
+        flags.append("--ollama")
     if args.openai:
-        flags.append("-openai")
+        flags.append("--openai")
     if args.deepseek:
-        flags.append("-deepseek")
+        flags.append("--deepseek")
 
     subprocess.run([sys.executable, LLM_CONTROLLER_PATH] + flags)
 
@@ -71,10 +71,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-init", action="store_true")
-    parser.add_argument("-ollama", action="store_true")
-    parser.add_argument("-openai", action="store_true")
-    parser.add_argument("-deepseek", action="store_true")
+    parser.add_argument("--init", action="store_true")
+    parser.add_argument("--ollama", action="store_true")
+    parser.add_argument("--openai", action="store_true")
+    parser.add_argument("--deepseek", action="store_true")
     args = parser.parse_args()
 
     main(args)
