@@ -9,6 +9,7 @@ import os
 from tqdm import tqdm
 from natsort import natsorted
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import argparse
 
 load_dotenv()
 openai_client = OpenAI()
@@ -113,53 +114,58 @@ def save_checkpoint(index):
     with open("checkpoint.txt", "w") as f:
         f.write(str(index))
 
-def enhance_full_file(file_path):
+def enhance_full_file(file_path, args):
     with open(file_path, "r", encoding="utf-8") as f:
         human_code = f.read()
 
-    tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: gpt-4o")
-    enhance_and_save_code_openai(
-        human_code, str(file_path.parent) + "/OpenAI/4o.py", "gpt-4o"
-    )
+    if args.openai:
+        tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: gpt-4o")
+        enhance_and_save_code_openai(
+            human_code, str(file_path.parent) + "/OpenAI/4o.py", "gpt-4o"
+        )
 
-    tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort low")
-    enhance_and_save_code_openai(
-        human_code, str(file_path.parent) + "/OpenAI/o4-low.py", "o4-mini", True, "low"
-    )
+        tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort low")
+        enhance_and_save_code_openai(
+            human_code, str(file_path.parent) + "/OpenAI/o4-low.py", "o4-mini", True, "low"
+        )
 
-    tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort medium")
-    enhance_and_save_code_openai(
-        human_code, str(file_path.parent) + "/OpenAI/o4-medium.py", "o4-mini", True, "medium"
-    )
+        tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort medium")
+        enhance_and_save_code_openai(
+            human_code, str(file_path.parent) + "/OpenAI/o4-medium.py", "o4-mini", True, "medium"
+        )
 
-    tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort high")
-    enhance_and_save_code_openai(
-        human_code, str(file_path.parent) + "/OpenAI/o4-high.py", "o4-mini", True, "high"
-    )
+        tqdm.write("Enhancing " + str(file_path) + " using OpenAI model: o4-mini, effort high")
+        enhance_and_save_code_openai(
+            human_code, str(file_path.parent) + "/OpenAI/o4-high.py", "o4-mini", True, "high"
+        )
 
-    tqdm.write("Enhancing " + str(file_path) + " using Deepseek model: V3")
-    enhance_and_save_code_deepseek(
-        human_code, str(file_path.parent) + "/DeepSeek/V3.py", "deepseek-chat"
-    )
+    if args.deepseek:
+        tqdm.write("Enhancing " + str(file_path) + " using Deepseek model: V3")
+        enhance_and_save_code_deepseek(
+            human_code, str(file_path.parent) + "/DeepSeek/V3.py", "deepseek-chat"
+        )
 
-    tqdm.write("Enhancing " + str(file_path) + " using Deepseek model: R1")
-    enhance_and_save_code_deepseek(
-        human_code, str(file_path.parent) + "/DeepSeek/R1.py", "deepseek-reasoner"
-    )
+        tqdm.write("Enhancing " + str(file_path) + " using Deepseek model: R1")
+        enhance_and_save_code_deepseek(
+            human_code, str(file_path.parent) + "/DeepSeek/R1.py", "deepseek-reasoner"
+        )
 
-    # tqdm.write("Enhancing " + str(file_path) + " using Ollama model: " + ollama_model)
-    # enhance_and_save_code_ollama(
-    #     human_code, str(file_path.parent) + "/Ollama/ollama.py", ollama_model
-    # )
+    if args.ollama:
+        tqdm.write("Enhancing " + str(file_path) + " using Ollama model: " + ollama_model)
+        enhance_and_save_code_ollama(
+            human_code, str(file_path.parent) + "/Ollama/ollama.py", ollama_model
+        )
 
-def process_file(file_path):
+def process_file(file_path, args):
+    print("Args received:", args)
+    print("args.ollama =", args.ollama)
     try:
-        enhance_full_file(file_path)
+        enhance_full_file(file_path, args)
         return (file_path, None)
     except Exception as e:
         return (file_path, e)
 
-def main():
+def main(args):
     files = natsorted(find_human_python_files("../project_root"), key=str)
     start_index = load_checkpoint()
     files = files[start_index:]
@@ -169,7 +175,7 @@ def main():
 
     max_workers = 5  # Passe das ggf. an deine API-Limits an!
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(process_file, f): f for f in files}
+        futures = {executor.submit(process_file, f, args): f for f in files}
         for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing files", unit="file")):
             file_path, error = future.result()
             if error:
@@ -180,4 +186,11 @@ def main():
             save_checkpoint(start_index + i + 1)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-openai", action="store_true")
+    parser.add_argument("-deepseek", action="store_true")
+    parser.add_argument("-ollama", action="store_true")
+    args = parser.parse_args()
+
+    main(args)
+
