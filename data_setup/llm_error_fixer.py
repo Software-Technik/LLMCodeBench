@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 PROJECT_ROOT = "../project_root"
 ERROR_LOG = "./logs/execution_errors.txt"
@@ -26,7 +28,7 @@ def get_model_and_func_from_path(path):
         elif "R1.py" in path:
             return enhance_and_save_code_deepseek, "deepseek-reasoner"
     elif "/Ollama/" in path:
-        return enhance_and_save_code_ollama, "devtral:24b"
+        return enhance_and_save_code_ollama, os.environ.get("OLLAMA_MODEL")
     return None
 
 
