@@ -1,6 +1,11 @@
 import numpy as np
+import sys
 
 INPUT = 3018458
+
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    INPUT = int(file.read().strip())
 
 def find_elf(elves):
     if len(elves) <= 2:
@@ -30,8 +35,4 @@ def new_rules(elves):
 
 elf_circle = np.arange(INPUT)
 
-print("Hey Elves, why don't you start playing the Yankee swap?")
-print(f"Who did win all presents? Elf {find_elf(elf_circle)}?")
-print("....")
-print("Wait wait wait, you should take the present from the one across you!")
-print(f"Who is the winner now? Elf {new_rules(elf_circle)}?")
+print(find_elf(elf_circle), new_rules(elf_circle))

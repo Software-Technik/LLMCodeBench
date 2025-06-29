@@ -1,126 +1,94 @@
 import sys
-from collections import defaultdict, deque
-import re
+
+sys.setrecursionlimit(10000)
+
+dirs = ((-1, 0, "<"), (1, 0, ">"), (0, -1, "^"), (0, 1, "v"))
+
+def part1(text):
+    tiles = text.strip().splitlines()
+    dimx = len(tiles[0])
+    dimy = len(tiles)
+    sx, sy = tiles[0].find("."), 0
+    fx, fy = tiles[-1].find("."), dimy - 1
+
+    def dfs1(x, y, path, plen):
+        if (x, y) == (fx, fy):
+            return plen
+        path[y * dimx + x] = 1
+        best = 0
+        for dx, dy, dc in dirs:
+            nx, ny = x + dx, y + dy
+            if (tiles[ny][nx] == "." or tiles[ny][nx] == dc) and not path[ny * dimx + nx]:
+                best = max(best, dfs1(nx, ny, path, plen + 1))
+        path[y * dimx + x] = 0
+        return best
+
+    path = [0] * (dimx * dimy)
+    return dfs1(sx, sy + 1, path, 1)
+
+def part2(text):
+    tiles = text.strip().splitlines()
+    dimx = len(tiles[0])
+    dimy = len(tiles)
+    sx, sy = tiles[0].find("."), 0
+    fx, fy = tiles[-1].find("."), dimy - 1
+
+    def dfs2(x, y, visited, prev, last, steps, branches, graph):
+        visited.add((x, y))
+        cnt = 0
+        for dx, dy, _ in dirs:
+            nx, ny = x + dx, y + dy
+            if tiles[ny][nx] != "#" and (nx, ny) != prev:
+                cnt += 1
+        if cnt > 1:
+            cur = branches[(x, y)] = len(branches)
+            graph.append([])
+            graph[cur].append((last, steps))
+            graph[last].append((cur, steps))
+            last = cur
+            steps = 0
+        for dx, dy, _ in dirs:
+            nx, ny = x + dx, y + dy
+            if (nx, ny) != prev and (nx, ny) in branches:
+                cur = branches[(nx, ny)]
+                graph[cur].append((last, steps + 1))
+                graph[last].append((cur, steps + 1))
+            elif tiles[ny][nx] != "#" and (nx, ny) not in visited:
+                dfs2(nx, ny, visited, (x, y), last, steps + 1, branches, graph)
+
+    def dfs3(cur, path, steps, graph):
+        if cur == 1:
+            return steps
+        path |= 1 << cur
+        best = 0
+        for dst, add in graph[cur]:
+            if not path & (1 << dst):
+                best = max(best, dfs3(dst, path, steps + add, graph))
+        return best
+
+    def bfstrim(start, graph):
+        stack = [start]
+        while stack:
+            next_stack = []
+            for cur in stack:
+                for dst, _ in graph[cur]:
+                    if len(graph[dst]) == 3:
+                        for t, d in graph[dst]:
+                            if t == cur:
+                                to_remove = (t, d)
+                        graph[dst].remove(to_remove)
+                        next_stack.append(dst)
+            stack = next_stack
+
+    branches = {(sx, sy): 0, (fx, fy): 1}
+    graph = [[], []]
+    dfs2(sx, sy + 1, set(), (sx, sy), 0, 1, branches, graph)
+    bfstrim(0, graph)
+    return dfs3(0, 0, 0, graph)
 
 
-def part1(data):
-    s = (0, data[0].index("."))
-    e = (len(data) - 1, data[-1].index("."))
-
-    dists = defaultdict(int)
-
-    q = deque([(s, set())])
-    res = []
-    available = [
-        ((0, 1), ">"),
-        ((0, -1), "<"),
-        ((1, 0), "v"),
-        ((-1, 0), "^"),
-    ]
-    while q:
-        pos, visited = q.popleft()
-        if pos in visited:
-            continue
-        visited.add(pos)
-
-        if pos in dists:
-            if len(visited) < dists[pos]:
-                continue
-            else:
-                dists[pos] = len(visited)
-
-        r, c = pos
-        if pos == e:
-            res.append(len(visited) - 1)
-
-        for dr, dc in ((0, 1), (0, -1), (1, 0), (-1, 0)):
-            nr, nc = r + dr, c + dc
-
-            if 0 <= nr < len(data) and 0 <= nc < len(data[0]) and (data[nr][nc] == "." or ((dr, dc), data[nr][nc]) in available):
-                if (nr, nc) not in visited:
-                    q.append(((nr, nc), visited | {pos}))
-
-    return max(res)
-
-def part2_wtf(data):
-    new_data = []
-    for line in data:
-        line = line.replace("^", ".")
-        line = line.replace(">", ".")
-        line = line.replace("v", ".")
-        line = line.replace("<", ".")
-        new_data.append(line)
-    return part1(new_data)
-
-def part2(data):
-    """
-    1. find all intersections
-    2. find all the connected path for each node (intersection, start, end)
-    3. dfs using above infos
-    """
-
-    _map = []
-    for line in data:
-        line = re.sub(r"[\^>v<]", ".", line)
-        _map.append(list(line))
-
-    h = len(_map)
-    w = len(_map[0])
-    start = (0, data[0].index("."))
-    end = (h - 1, data[-1].index("."))
-    nodes = {start, end}
-
-    # find all intersections
-    for y in range(1, h - 1):
-        for x in range(1, w - 1):
-            if _map[y][x] == ".":
-                dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                neighbors = [(y + d[0], x + d[1]) for d in dirs]
-                if sum(1 for ny, nx in neighbors if _map[ny][nx] == ".") > 2:
-                    nodes.add((y, x))
-
-    # find all the connected path for each node
-    paths = {}
-    connects = defaultdict(set)
-
-    for node in nodes:
-        q = deque([(node, set())])
-        while q:
-            pos, visited = q.popleft()
-            if pos in visited:
-                continue
-            visited.add(pos)
-            r, c = pos
-            for dr, dc in ((0, 1), (0, -1), (1, 0), (-1, 0)):
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < h and 0 <= nc < w and _map[nr][nc] == "." and (nr, nc) not in visited:
-                    if (nr, nc) in nodes:
-                        paths[(node, (nr, nc))] = len(visited)
-                        paths[((nr, nc), node)] = len(visited)
-                        connects[node].add((nr, nc))
-                        connects[(nr, nc)].add(node)
-                    else:
-                        q.append(((nr, nc), visited | {pos}))
-
-    # find all possible routes
-    q = deque([(start, [])])
-    res = []
-    while q:
-        pos, history = q.pop()
-
-        if pos == end:
-            res.append(history + [pos])
-            continue
-
-        for node in connects[pos]:
-            if node not in history and (pos, node) in paths:
-                q.append((node, history + [pos]))
-
-    max_dist = 0
-    for r in res:
-        dist = 0
-        for i in range(len(r) - 1):
-            dist += paths[(r[i], r[i + 1])]
-        max_dist = max(max_dist, dist)
-
-    return max_dist
+if __name__ == "__main__":
+    inout_strings = sys.argv[1]
+    with open(inout_strings) as f:
+        text = f.read()
+    sys.stdout.write(f"{part1(text)} {part2(text)}")

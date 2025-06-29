@@ -141,8 +141,7 @@ def part2(text):
     return lcm_all(seen.values())
 
 
-if __name__ == "__main__":
-    inout_strings = sys.argv[1]
-    with open(inout_strings) as f:
-        text = f.read()
-    sys.stdout.write(f"{part1(text)} {part2(text)}")
+inout_strings = sys.argv[1]
+with open(inout_strings) as f:
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

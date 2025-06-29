@@ -1,6 +1,9 @@
 from hashlib import md5
+import sys
 
-SALT = 'qzyelonm'
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    SALT = file.read().strip()
 
 
 def find_keys(second_part=False):
@@ -28,9 +31,4 @@ def find_keys(second_part=False):
         index += 1
     return sorted(valid_keys)[63]
 
-
-print("I need to contact Santa, and I need MD5 keys for that.")
-print(f"He said to use 64th key, which is {find_keys()}.")
-print("....")
-print("Wait, he said to encript this 2016 times!")
-print(f"Then the 64th key is {find_keys('second')}.")
+print(find_keys(), find_keys('second'))

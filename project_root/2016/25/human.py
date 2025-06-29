@@ -1,3 +1,5 @@
+import sys
+
 def execute(a):
 
     inout_strings = sys.argv[1]
@@ -47,5 +49,4 @@ while True:
         break
     i += 1
 
-print("Let me try every number, starting from zero, brute forcing it.")
-print("The number I was looking for is:", i)
+print(i)

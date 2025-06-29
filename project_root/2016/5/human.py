@@ -1,6 +1,12 @@
 import hashlib
+import sys
 
-DOOR_ID = 'wtnhxymk'
+DOOR_ID = ''
+
+inout_strings = sys.argv[1]
+
+with open(inout_strings, 'r') as infile:
+    DOOR_ID = infile.readline().strip()
 
 first_password = ''
 second_password = [''] * 8
@@ -19,6 +25,4 @@ while available_positions:
             available_positions.remove(md5_hex[5])
     i += 1
 
-print("The password for a first door is:", first_password)
-print('....')
-print("The password for a second door is:", ''.join(second_password))
+print(first_password, ''.join(second_password))

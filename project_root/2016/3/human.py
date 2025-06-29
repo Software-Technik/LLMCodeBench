@@ -23,8 +23,4 @@ def find_triangles(candidates, second_part=False):
                    for i in range(0, len(candidates)-2, 3))
 
 
-print("Lots of potential triangles on the walls here.")
-print("Let me just quickly calculate their number:", find_triangles(horizontal))
-print('.....')
-print("But wait! Maybe they are drawn vertically?")
-print("Number of those triangles is:", find_triangles(vertical, True))
+print(find_triangles(horizontal), find_triangles(vertical, True))
