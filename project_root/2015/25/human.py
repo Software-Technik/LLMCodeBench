@@ -14,10 +14,8 @@ def part1(data):
         s = (s * 252533) % 33554393
     return s
 
-def part2(data):
-    return "Merry Christmas!"
 
 input_strings = sys.argv[1]
 with open(input_strings) as f:
     data = [line.strip() for line in f]
-sys.stdout.write(f"{part1(data)}\n{part2(data)}\n")
+sys.stdout.write(f"{part1(data)}\n")

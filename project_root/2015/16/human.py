@@ -23,7 +23,8 @@ perfumes: 1""".split(
                 new_data += [i]
         test_data = new_data
         new_data = []
-    return test_data
+    return int(test_data[0].split()[1][:-1])
+
 
 def part2(data):
     tests = """children: 3
@@ -59,7 +60,8 @@ perfumes: 1""".split(
                     new_data += [i]
         test_data = new_data
         new_data = []
-    return test_data
+    return int(test_data[0].split()[1][:-1])
+
 
 input_strings = sys.argv[1]
 with open(input_strings) as f:
