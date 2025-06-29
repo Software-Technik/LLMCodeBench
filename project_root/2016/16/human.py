@@ -3,11 +3,6 @@ import sys
 
 # INPUT='01110110101001000'
 
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r')  as file:
-    INPUT = file.read().strip()
-
-START = list(map(int, INPUT))
 DISK_1 = 272
 DISK_2 = 35651584
 
@@ -26,8 +21,20 @@ def create_checksum(data):
     return ''.join(map(str, map(int, data)))
 
 
-first = create_checksum(fill_disk(START, DISK_1))
-second = create_checksum(fill_disk(START, DISK_2))
+def part1(data):
+    d = fill_disk(list(map(int, data)), DISK_1)
+    while len(d) % 2 == 0:
+        d = [a == b for a, b in zip(d[::2], d[1::2])]
+    return ''.join(map(str, map(int, d)))
 
+def part2(data):
+    d = fill_disk(list(map(int, data)), DISK_2)
+    while len(d) % 2 == 0:
+        d = [a == b for a, b in zip(d[::2], d[1::2])]
+    return ''.join(map(str, map(int, d)))
 
-print(first, second)
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    data = file.read().strip()
+
+sys.stdout.write(f"{part1(data)} {part2(data)}")  
