@@ -15,7 +15,7 @@ def part1(data):
 
 def part2(data):
     df = np.array([list(map(int, [c for c in line])) for line in data])
-    return np.prod(sorted([r.area for r in regionprops(label(df < 9, connectivity=1))])[-3:])   # 1100682
+    return int(np.prod(sorted([r.area for r in regionprops(label(df < 9, connectivity=1))])[-3:]))   # 1100682
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
