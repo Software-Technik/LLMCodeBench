@@ -67,7 +67,7 @@ def part2(data):
     # Read the input and compose all of the shuffle steps
     shuf = IDENTITY
     for line in data:
-        print(line)
+        #print(line)
         f = line.split()
         if line == "deal into new stack":
             shuf = shuffle_compose([ -1, -1 ], shuf)
