@@ -1,147 +1,148 @@
 import sys
 import math
+from functools import reduce
+
+bus = []
+
+class Module:
+    def __init__(self, name, destinations):
+        self.name = name
+        self.destinations = destinations
+
+    def send(self):
+        for destination in self.destinations:
+            bus.append((self.name, destination, self.state))
+
+    def instantiate_destinations(self, modules):
+        self.destinations = [modules.get(dest, Module(dest, [])) if isinstance(dest, str) else dest for dest in self.destinations]
+
+    def recv(self, source, signal):
+        pass
+
+    def reset(self):
+        pass
 
 
+class FlipFlop(Module):
+    def __init__(self, name, destinations):
+        super().__init__(name, destinations)
+        self.state = 0
 
-def part1( data):
-    cycle = 0
-    pulse_count = [0, 0]  # index: 0 = low, 1 = high
+    def recv(self, source, signal):
+        if signal == 0:
+            self.state ^= 1
+            self.send()
 
-    mods = parse_modules(data)
+    def reset(self):
+        self.state = 0
 
-    while cycle < 1000:
-        cycle += 1
-        """
-        button to broadcaster add 1 low pulse
-        broadcaster to its destinations add 1 low pulse each
-        """
-        pulse_count[0] += len(mods["broadcaster"]["dest"]) + 1
 
-        q = [(mods["broadcaster"]["dest"], 0, "broadcaster")]  # destinations, pulse, source
-        while q:
-            dests, pulse, source = q.pop(0)
-            for dest in dests:
-                if dest not in mods:  # already reached the untyped module (like output), do nothing
-                    continue
+class Conjunction(Module):
+    def __init__(self, name, destinations, sources):
+        super().__init__(name, destinations)
+        self.signals = {src: 0 for src in sources}
 
-                if mods[dest]["type"] == "%":
-                    if pulse == 0:  # only work on receive a low pulse
-                        mods[dest]["switch"] = not mods[dest]["switch"]
-                        _next_pulse = int(mods[dest]["switch"])
-                        pulse_count[_next_pulse] += len(mods[dest]["dest"])
-                        q.append((mods[dest]["dest"], _next_pulse, dest))
-                elif mods[dest]["type"] == "&":
-                    mods[dest]["inputs"][source] = pulse
-                    _next_pulse = 1 - all(mods[dest]["inputs"].values())
-                    pulse_count[_next_pulse] += len(mods[dest]["dest"])
-                    q.append((mods[dest]["dest"], _next_pulse, dest))
+    @property
+    def state(self):
+        return int(not all(self.signals.values()))
 
-        if is_all_off(mods):
-            break
+    def recv(self, source, signal):
+        self.signals[source] = signal
+        self.send()
 
-    return ((1000 // cycle) ** 2) * math.prod(pulse_count)
+    def reset(self):
+        for key in self.signals:
+            self.signals[key] = 0
 
-def parse_modules(data):
-    mods = {}
-    conj = {}
 
-    for line in data:
-        name, dest = line.split(" -> ")
-        dest = set(dest.split(", "))
+class Broadcaster(Module):
+    def recv(self, source, signal):
+        self.state = signal
+        self.send()
 
-        mod = {"dest": dest}
-        _type = name[0]
 
-        if _type == "%":  # Flip-flop modules
-            name = name[1:]
-            mod["switch"] = False
-        elif _type == "&":  # Conjunction modules
-            name = name[1:]
-            if name not in conj:
-                conj[name] = {}
-            mod["inputs"] = conj[name]
-        else:
-            _type = name
-        mod["type"] = _type
-        mods[name] = mod
+def strip_prefix(name):
+    return name[1:] if name[0] in "%&" else name
 
-    for c in conj:
-        for m in mods:
-            if c in mods[m]["dest"]:
-                conj[c][m] = False
 
-    return mods
+def parse_network(text):
+    lines = text.strip().splitlines()
+    network = {}
+    modules = {}
 
-def is_all_off(mods):
-    switch = {m: v["switch"] for m, v in mods.items() if v["type"] == "%"}
-    if any(switch.values()):
-        return False
-    """
-    in fact the requirement is only ask all flip-flop modules should be off
-    no need to check conjunction modules
-    """
-    # inputs = {m: v["inputs"] for m, v in mods.items() if v["type"] == "&"}
-    # if any(any(inputs[c].values()) for c in inputs):
-    #     return False
+    for line in lines:
+        source, dests = line.split(" -> ")
+        network[source] = dests.split(", ")
 
-    return True
+    for key in network:
+        if key.startswith("%"):
+            modules[key[1:]] = FlipFlop(key[1:], network[key])
+        elif key.startswith("&"):
+            sources = [strip_prefix(k) for k in network if key[1:] in network[k]]
+            modules[key[1:]] = Conjunction(key[1:], network[key], sources)
+        elif key == "broadcaster":
+            modules["broadcaster"] = Broadcaster("broadcaster", network[key])
 
-def part2(data):
-    cycle = 0
-    pulse_count = [0, 0]  # index: 0 = low, 1 = high
+    for mod in modules.values():
+        mod.instantiate_destinations(modules)
 
-    mods = parse_modules(data)
+    return network, modules
 
-    """
-    from rx traversal back to it's parents, until reach a multi-input conjunction module
-    find the cycles of the inputs of that conjunction module, calc the lcm of them
-    """
-    parents = set([m for m, v in mods.items() if "rx" in v["dest"]])
-    expect_pulse = 0
 
-    while 1:
-        upper_parents = set([m for m, v in mods.items() if v["dest"] & parents])
-        parents = upper_parents
-        expect_pulse = 1 - expect_pulse
-        if len(parents) > 1:
-            break
+def part1(text):
+    global bus
+    _, modules = parse_network(text)
+    counts = [0, 0]
 
-    cycles = {mod: 0 for mod in parents}
+    for _ in range(1000):
+        bus = [("button", modules["broadcaster"], 0)]
+        while bus:
+            source, destination, signal = bus.pop(0)
+            counts[signal] += 1
+            destination.recv(source, signal)
 
-    while 1:
-        cycle += 1
-        """
-        button to broadcaster add 1 low pulse
-        broadcaster to its destinations add 1 low pulse each
-        """
-        pulse_count[0] += len(mods["broadcaster"]["dest"]) + 1
+    return counts[0] * counts[1]
 
-        q = [(mods["broadcaster"]["dest"], 0, "broadcaster")]  # destinations, pulse, source
-        while q:
-            dests, pulse, source = q.pop(0)
-            for dest in dests:
-                if dest not in mods:  # already reached the untyped module (like output), do nothing
-                    continue
 
-                if mods[dest]["type"] == "%":
-                    if pulse == 0:  # only work on receive a low pulse
-                        mods[dest]["switch"] = not mods[dest]["switch"]
-                        _next_pulse = int(mods[dest]["switch"])
-                        pulse_count[_next_pulse] += len(mods[dest]["dest"])
-                        q.append((mods[dest]["dest"], _next_pulse, dest))
-                elif mods[dest]["type"] == "&":
-                    mods[dest]["inputs"][source] = pulse
-                    _next_pulse = 1 - all(mods[dest]["inputs"].values())
-                    pulse_count[_next_pulse] += len(mods[dest]["dest"])
-                    q.append((mods[dest]["dest"], _next_pulse, dest))
+def lcm(a, b):
+    return abs(a * b) // math.gcd(a, b)
 
-                if dest in cycles and cycles[dest] == 0 and _next_pulse == expect_pulse:
-                    cycles[dest] = cycle
 
-                if all(cycles.values()):
-                    return math.lcm(*cycles.values())
+def lcm_all(nums):
+    return reduce(lcm, nums)
 
-inout_strings = sys.argv[1]
-with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+
+def part2(text):
+    global bus
+    network, modules = parse_network(text)
+
+    rx_input = None
+    for name, mod in modules.items():
+        for dest in mod.destinations:
+            if dest.name == "rx":
+                rx_input = mod.name
+    inputs_to_rx_input = [
+        name for name, mod in modules.items()
+        if rx_input in [d.name for d in mod.destinations]
+    ]
+
+    seen = {}
+    i = 0
+    while len(seen) < len(inputs_to_rx_input):
+        bus = [("button", modules["broadcaster"], 0)]
+        while bus:
+            source, dest, signal = bus.pop(0)
+            if dest.name == rx_input and signal == 1 and source in inputs_to_rx_input:
+                if source not in seen:
+                    seen[source] = i + 1
+            dest.recv(source, signal)
+        i += 1
+
+    return lcm_all(seen.values())
+
+
+if __name__ == "__main__":
+    inout_strings = sys.argv[1]
+    with open(inout_strings) as f:
+        text = f.read()
+    sys.stdout.write(f"{part1(text)} {part2(text)}")

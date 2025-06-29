@@ -1,97 +1,60 @@
 from itertools import combinations
-import z3
+import sympy as sp
+import sys
 
 
+def part1(puzzle_input, test_input=False):
+    hailstones = []
+    for line in puzzle_input.split('\n'):
+        nums = line.replace('@', ',').split(',')
+        hailstones.append(tuple(map(int, nums)))
 
-def part1(data):
-    hails = []
-    for line in data:
-        pos, vel = line.split(" @ ")
-        pos = tuple(map(int, pos.split(",")))
-        vel = tuple(map(int, vel.split(",")))
-        hails.append((pos, vel))
-
-    formulas = {}
-    for hail in hails:
-        pos, vel = hail
-        x, y, z = pos
-        a, b, c = vel
-        t = a / b
-        u = x - t * y
-        f = (1, -t, -u)
-        formulas[hail] = f
-
-    if len(data) == 5:
-        _range = (7, 27)
+    if test_input:
+        lo, hi = 7, 27
     else:
-        _range = (200000000000000, 400000000000000)
-
-    r = 0
-    groups = combinations(hails, 2)
-
-    for group in groups:
-        f1 = formulas[group[0]]
-        f2 = formulas[group[1]]
-
-        x1, y1, z1 = group[0][0]
-        x2, y2, z2 = group[1][0]
-        vel1 = group[0][1]
-        vel2 = group[1][1]
-
-        a1, b1, c1 = f1
-        a2, b2, c2 = f2
-
-        b = b2 - b1
-        c = c2 - c1
-        if b == 0:
-            # print("parallel")
+        lo, hi = 2e14, 4e14
+        
+    total = 0
+    for h1, h2 in combinations(hailstones, 2):
+        x1, y1, _, dx1, dy1, _ = h1
+        x2, y2, _, dx2, dy2, _ = h2
+        m1 = dy1 / dx1
+        m2 = dy2 / dx2
+        if m1 == m2:   # they move in parallel and never meet
             continue
-        else:
-            y = -c / b
-            x = (-b1 * y - c1) / a1
+        b1 = y1 - m1*x1
+        b2 = y2 - m2*x2
+        x = (b2-b1) / (m1-m2)
+        y = m1*x + b1
+        if all((lo <= x <= hi,  # x and y need to be in range
+                lo <= y <= hi,
+                (x > x1 and dx1 > 0) or (x < x1 and dx1 < 0),  # itersection needs to happen in the future
+                (x > x2 and dx2 > 0) or (x < x2 and dx2 < 0))):
+            total += 1
 
-            if _range[0] <= x <= _range[1] and _range[0] <= y <= _range[1]:
-                sign1 = (1 if vel1[0] > 0 else -1, 1 if vel1[1] > 0 else -1)
-                sign2 = (1 if vel2[0] > 0 else -1, 1 if vel2[1] > 0 else -1)
+    return total
 
-                test1 = (1 if x - x1 > 0 else -1, 1 if y - y1 > 0 else -1)
-                test2 = (1 if x - x2 > 0 else -1, 1 if y - y2 > 0 else -1)
 
-                if sign1 == test1 and sign2 == test2:
-                    # print("match")
-                    r += 1
+def part2(puzzle_input):
+    first_three_hailstones = []
+    for line in puzzle_input.split('\n')[:3]:
+        nums = line.replace('@', ',').split(',')
+        first_three_hailstones.append(tuple(map(int, nums)))
 
-    return r
+    unknowns = sp.symbols('x y z dx dy dz t1 t2 t3')
+    x, y, z, dx, dy, dz, *time = unknowns
 
-def part2(data):
-    """
-    refs:
-    https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-    https://www.reddit.com/r/adventofcode/comments/18pnycy/comment/kepu26z/
+    equations = []  # build system of 9 equations with 9 unknowns
+    for t, h in zip(time, first_three_hailstones):
+        equations.append(sp.Eq(x + t*dx, h[0] + t*h[3]))
+        equations.append(sp.Eq(y + t*dy, h[1] + t*h[4]))
+        equations.append(sp.Eq(z + t*dz, h[2] + t*h[5]))
 
-    tried to find a solution without using third party libraries but failed
-    use the z3 solver to solve the equations for now
+    solution = sp.solve(equations, unknowns).pop()
+    return sum(solution[:3])
 
-    after solved the part 2 I found the refs above but still try to understand them
-    may implement them later
-    """
-    hails = []
-    for line in data:
-        pos, vel = line.split(" @ ")
-        pos = tuple(map(int, pos.split(",")))
-        vel = tuple(map(int, vel.split(",")))
-        hails.append((pos, vel))
 
-    # using z3 to solve the system of equations
-    px, py, pz, vx, vy, vz = z3.Ints("px py pz vx vy vz")
-    times = [z3.Int("t" + str(i)) for i in range(len(hails))]
-
-    s = z3.Solver()
-    for i, (pos, vel) in enumerate(hails):
-        s.add(px + vx * times[i] == pos[0] + vel[0] * times[i])
-        s.add(py + vy * times[i] == pos[1] + vel[1] * times[i])
-        s.add(pz + vz * times[i] == pos[2] + vel[2] * times[i])
-    s.check()
-    ans = s.model().evaluate(px + py + pz)
-
-    return ans.as_long()
+inout_strings = sys.argv[1]
+with open(inout_strings) as f:
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

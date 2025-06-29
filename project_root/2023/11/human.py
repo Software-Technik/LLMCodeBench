@@ -1,56 +1,37 @@
 import sys
+import numpy as np
 
-def part1( data):
-    expand_level = 2
-    return calc_length(data, expand_level)
 
-def part2( data):
-    expand_level = 1000000
+def parse_input(text):
+    lines = text.strip().splitlines()
+    data = np.array([list(line) for line in lines])
+    return data
 
-    # for the test case
-    if len(data) == 10:
-        expand_level = 100
+def compute(data, expansion_factor):
+    y, x = np.where(data == "#")
 
-    return calc_length(data, expand_level)
+    empty_r = [i for i in range(data.shape[0]) if all(data[i] == ".")]
+    empty_c = [i for i in range(data.shape[1]) if all(data[:, i] == ".")]
 
-def calc_length( data, expand_level):
-    expand_cols = []
-    expand_rows = []
-    galaxies = []
+    new_y = y + expansion_factor * np.array([y > r for r in empty_r]).sum(axis=0)
+    new_x = x + expansion_factor * np.array([x > c for c in empty_c]).sum(axis=0)
 
-    for r, line in enumerate(data):
-        if "#" in line:
-            for c, v in enumerate(line):
-                if v == "#":
-                    galaxies.append((r, c))
-        else:
-            expand_rows.append(r)
+    total_distance = (
+        abs(new_y - new_y[:, None]) + abs(new_x - new_x[:, None])
+    ).sum() // 2
 
-    for c, col in enumerate(zip(*data)):
-        if "#" not in col:
-            expand_cols.append(c)
+    return total_distance
 
-    _sum = 0
-    for i in range(len(galaxies) - 1):
-        for j in range(i + 1, len(galaxies)):
-            y1, x1 = galaxies[i]
-            y2, x2 = galaxies[j]
+def part1(text):
+    data = parse_input(text)
+    return compute(data, expansion_factor=1)
 
-            y1, y2 = sorted([y1, y2])
-            x1, x2 = sorted([x1, x2])
-
-            w = x2 - x1
-            h = y2 - y1
-
-            cols = sum([1 for c in expand_cols if x1 < c < x2])
-            rows = sum([1 for r in expand_rows if y1 < r < y2])
-
-            _sum += w + h + (expand_level - 1) * (cols + rows)
-
-    return _sum
+def part2(text):
+    data = parse_input(text)
+    return compute(data, expansion_factor=999_999)
 
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

@@ -1,179 +1,255 @@
 import sys
 import re
 
-"""
-F - 7
-|   |
-L - J
-"""
+START = "S"
+VERTICAL_PIPE = "|"
+HORIZONTAL_PIPE = "-"
+NORTH_TO_EAST = "L"
+NORTH_TO_WEST = "J"
+SOUTH_TO_EAST = "F"
+SOUTH_TO_WEST = "7"
+
+UP = "up"
+DOWN = "down"
+LEFT = "left"
+RIGHT = "right"
 
 
-def part1(data):
-    _map, _start, _loop_nodes = parse_map(data)
-    return len(_loop_nodes) // 2
+def get_start(maze: list[str]) -> tuple[int, int]:
+    for i in range(len(maze)):
+        for j in range(len(maze[i])):
+            if maze[i][j] == START:
+                return (i, j)
+    return (0, 0)
 
-def part2( data):
-    _map, _start, _loop_nodes = parse_map(data)
-    row_counts = []
+def part1(text: str)->int:
+    maze = text.splitlines()
+    i, j = get_start(maze)
 
-    for h, items in enumerate(_map):
-        line = [v if (h, w) in _loop_nodes else "." for w, v in enumerate(items)]
-        line = "".join(line)
+    direction = None
 
-        line = re.sub(r"L-*7", "|", line)
-        line = re.sub(r"L-*J", "||", line)
-        line = re.sub(r"F-*7", "||", line)
-        line = re.sub(r"F-*J", "|", line)
+    # Up
+    if i > 0 and maze[i - 1][j] in [VERTICAL_PIPE, SOUTH_TO_EAST, SOUTH_TO_WEST]:
+        i -= 1
+        direction = UP
+    # Down
+    elif i < len(maze) - 1 and maze[i + 1][j] in [
+        VERTICAL_PIPE,
+        NORTH_TO_EAST,
+        NORTH_TO_WEST,
+    ]:
+        i += 1
+        direction = DOWN
+    # Left
+    elif j > 0 and maze[i][j - 1] in [HORIZONTAL_PIPE, SOUTH_TO_EAST, NORTH_TO_EAST]:
+        j -= 1
+        direction = LEFT
+    # Right
+    elif j < len(maze[i]) - 1 and maze[i][j + 1] in [
+        HORIZONTAL_PIPE,
+        SOUTH_TO_WEST,
+        NORTH_TO_WEST,
+    ]:
+        j += 1
+        direction = RIGHT
 
-        cross = 0
-        inside = 0
+    steps = 1
+    while maze[i][j] != START:
+        pipe = maze[i][j]
+        if pipe == VERTICAL_PIPE:
+            if direction == UP:
+                i -= 1
+            else:
+                i += 1
+        elif pipe == SOUTH_TO_EAST:
+            if direction == UP:
+                j += 1
+                direction = RIGHT
+            else:
+                i += 1
+                direction = DOWN
+        elif pipe == HORIZONTAL_PIPE:
+            if direction == LEFT:
+                j -= 1
+            else:
+                j += 1
+        elif pipe == SOUTH_TO_WEST:
+            if direction == UP:
+                j -= 1
+                direction = LEFT
+            else:
+                i += 1
+                direction = DOWN
+        elif pipe == NORTH_TO_WEST:
+            if direction == DOWN:
+                j -= 1
+                direction = LEFT
+            else:
+                i -= 1
+                direction = UP
+        elif pipe == NORTH_TO_EAST:
+            if direction == DOWN:
+                j += 1
+                direction = RIGHT
+            else:
+                i -= 1
+                direction = UP
 
-        for c in line:
-            if c == "." and cross % 2:
-                inside += 1
-            elif c in "F7LJ|":
-                cross += 1
-        row_counts.append(inside)
-    return sum(row_counts)
+        steps += 1
 
-def part2_shoelace_picks(data):
-    # region same as self.parse_map()
-    _start = None
-    _map = []
+    return steps // 2
 
-    for h, line in enumerate(data):
-        _map.append(list(line))
-        if "S" in line:
-            _start = (h, line.index("S"))
 
-    """ four adjacent directions """
-    adj_dirs = [  # top, right, bottom, left
-        (-1, 0),
-        (0, 1),
-        (1, 0),
-        (0, -1),
-    ]
+def get_edges(
+    intersections: list[tuple[int, int]]
+) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+    """
+    Given a list of intersections, return a list of edges used in the scanline algorithm.
 
-    """ define the direction connected to the adjacent node for each symbol """
-    symbol_connects = {  # top, right, bottom, left
-        "|": (1, 0, 1, 0),
-        "-": (0, 1, 0, 1),
-        "L": (1, 1, 0, 0),
-        "J": (1, 0, 0, 1),
-        "7": (0, 0, 1, 1),
-        "F": (0, 1, 1, 0),
-    }
-
-    """ define the types of adjacent nodes that can be connected for each direction """
-    # adj_connect_types = {pos: [k for k, v in symbol_connects.items() if v[(i + 2) % 4]] for i, pos in enumerate(adj_dirs)}
-    adj_connect_types = {
-        (-1, 0): "F|7",
-        (0, 1): "7-J",
-        (1, 0): "L|J",
-        (0, -1): "F-L",
-    }
-
-    adjs = [0, 0, 0, 0]  # top, right, bottom, left
-    for i, adj in enumerate(adj_dirs):
-        pos = tuple(a + b for a, b in zip(_start, adj))
-        if _map[pos[0]][pos[1]] in adj_connect_types[adj]:
-            adjs[i] = 1
-
-    _map[_start[0]][_start[1]] = {v: k for k, v in symbol_connects.items()}[tuple(adjs)]
-    # endregion
-
-    # order the corner nodes
-    nodes_ordered = []
-    visited = set()
-    curr = _start
-    while curr not in visited:
-        visited.add(curr)
-        c = _map[curr[0]][curr[1]]
-        if c in "LJ7F":
-            nodes_ordered.append(curr)
-        ds = [adj_dirs[i] for i, v in enumerate(symbol_connects[c]) if v == 1]
-        _next = tuple(map(sum, zip(curr, ds[0])))
-        if _next in visited:
-            _next = tuple(map(sum, zip(curr, ds[1])))
-        curr = _next
-    nodes_ordered.append(_start)
-
-    # shoelace formula
-    area = 0
-    for i in range(len(nodes_ordered) - 1):
-        y1, x1 = nodes_ordered[i]
-        y2, x2 = nodes_ordered[i + 1]
-        area += x1 * y2 - x2 * y1
-    area = abs(area) // 2
-
-    # pick's theorem
-    internal = area - len(visited) // 2 + 1
-    return internal
-
-def parse_map(data):
-    start = None
-    _map = []
-
-    for h, line in enumerate(data):
-        _map.append(list(line))
-        if "S" in line:
-            start = (h, line.index("S"))
-
-    """ four adjacent directions """
-    adj_dirs = [  # top, right, bottom, left
-        (-1, 0),
-        (0, 1),
-        (1, 0),
-        (0, -1),
-    ]
-
-    """ define the direction connected to the adjacent node for each symbol """
-    symbol_connects = {  # top, right, bottom, left
-        "|": (1, 0, 1, 0),
-        "-": (0, 1, 0, 1),
-        "L": (1, 1, 0, 0),
-        "J": (1, 0, 0, 1),
-        "7": (0, 0, 1, 1),
-        "F": (0, 1, 1, 0),
-    }
-
-    """ define the types of adjacent nodes that can be connected for each direction """
-    # adj_connect_types = {pos: [k for k, v in symbol_connects.items() if v[(i + 2) % 4]] for i, pos in enumerate(adj_dirs)}
-    adj_connect_types = {
-        (-1, 0): "F|7",
-        (0, 1): "7-J",
-        (1, 0): "L|J",
-        (0, -1): "F-L",
-    }
-
-    adjs = [0, 0, 0, 0]  # top, right, bottom, left
-    for i, adj in enumerate(adj_dirs):
-        pos = tuple(a + b for a, b in zip(start, adj))
-        if _map[pos[0]][pos[1]] in adj_connect_types[adj]:
-            adjs[i] = 1
-
-    _map[start[0]][start[1]] = {v: k for k, v in symbol_connects.items()}[tuple(adjs)]
-
-    queue = [start]
-    visited = set()
-
-    while queue:
-        pos = queue.pop(0)
-        if pos in visited:
-            continue
-        visited.add(pos)
-        if _map[pos[0]][pos[1]] in " .":
+    Horizontal edges are ignored, and the edges are sorted by their y coordinate.
+    """
+    edges = zip(intersections, intersections[1:] + [intersections[0]])
+    valid_edges = []
+    for a, b in edges:
+        # Don't include horizontal edges
+        if a[0] == b[0]:
             continue
 
-        sym = _map[pos[0]][pos[1]]
-        _dirs = [adj_dirs[i] for i, v in enumerate(symbol_connects[sym]) if v == 1]
-        for dy, dx in _dirs:
-            queue.append((pos[0] + dy, pos[1] + dx))
+        if a[0] < b[0]:
+            valid_edges.append((a, b))
+        else:
+            valid_edges.append((b, a))
+    return valid_edges
 
-    return _map, start, visited
+
+def get_start(maze: list[list[str]]) -> tuple[int, int]:
+    for i in range(len(maze)):
+        for j in range(len(maze[i])):
+            if maze[i][j] == START:
+                return (i, j)
+    return (0, 0)
+
+def part2(text: str) -> int:
+    """
+    Solve by getting the edges of the maze and using the scanline algorithm.
+
+    First, we get the edges of the maze by following the pipes,
+    then we use that to get all edges used in the scanline algorithm.
+
+    References:
+    - https://www.cs.drexel.edu/~deb39/Classes/CS430/Lectures/L-05_Polygons.pdf
+    - https://www.geeksforgeeks.org/scan-line-polygon-filling-using-opengl-c/
+    """
+    maze = [[c for c in line] for line in text.splitlines()]
+    start = get_start(maze)
+    i, j = start
+
+    intersections = [start]
+    direction = None
+
+    # Up
+    if i > 0 and maze[i - 1][j] in [VERTICAL_PIPE, SOUTH_TO_EAST, SOUTH_TO_WEST]:
+        i -= 1
+        direction = UP
+    # Down
+    elif i < len(maze) - 1 and maze[i + 1][j] in [
+        VERTICAL_PIPE,
+        NORTH_TO_EAST,
+        NORTH_TO_WEST,
+    ]:
+        i += 1
+        direction = DOWN
+    # Left
+    elif j > 0 and maze[i][j - 1] in [HORIZONTAL_PIPE, SOUTH_TO_EAST, NORTH_TO_EAST]:
+        j -= 1
+        direction = LEFT
+    # Right
+    elif j < len(maze[i]) - 1 and maze[i][j + 1] in [
+        HORIZONTAL_PIPE,
+        SOUTH_TO_WEST,
+        NORTH_TO_WEST,
+    ]:
+        j += 1
+        direction = RIGHT
+
+    pipe = maze[i][j]
+    while maze[i][j] != START:
+        pipe = maze[i][j]
+        if pipe == VERTICAL_PIPE:
+            maze[i][j] = "X"
+            if direction == UP:
+                i -= 1
+            else:
+                i += 1
+        elif pipe == SOUTH_TO_EAST:
+            maze[i][j] = "X"
+            intersections.append((i, j))
+            if direction == UP:
+                j += 1
+                direction = RIGHT
+            else:
+                i += 1
+                direction = DOWN
+        elif pipe == HORIZONTAL_PIPE:
+            maze[i][j] = "X"
+            if direction == LEFT:
+                j -= 1
+            else:
+                j += 1
+        elif pipe == SOUTH_TO_WEST:
+            maze[i][j] = "X"
+            intersections.append((i, j))
+            if direction == UP:
+                j -= 1
+                direction = LEFT
+            else:
+                i += 1
+                direction = DOWN
+        elif pipe == NORTH_TO_WEST:
+            maze[i][j] = "X"
+            intersections.append((i, j))
+            if direction == DOWN:
+                j -= 1
+                direction = LEFT
+            else:
+                i -= 1
+                direction = UP
+        elif pipe == NORTH_TO_EAST:
+            maze[i][j] = "X"
+            intersections.append((i, j))
+            if direction == DOWN:
+                j += 1
+                direction = RIGHT
+            else:
+                i -= 1
+                direction = UP
+
+    # We always asume that S is an intersection!
+    maze[start[0]][start[1]] = "X"
+
+    edges = get_edges(intersections)
+    intersections.sort()
+    min_y = intersections[0][0]
+    max_y = intersections[-1][0]
+
+    total = 0
+    for i in range(min_y + 1, max_y):
+        active_edges = [(a, b) for a, b in edges if a[0] <= i < b[0]]
+        active_edges.sort(key=lambda x: x[0][1])
+        subtotal = 0
+        for j in range(0, len(active_edges), 2):
+            a = active_edges[j][0][1]
+            b = active_edges[j + 1][0][1]
+            for k in range(a + 1, b):
+                if maze[i][k] != "X":
+                    subtotal += 1
+        total += subtotal
+
+    return total
+    
 
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

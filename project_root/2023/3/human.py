@@ -1,60 +1,150 @@
 import sys
-import re, math
 
 
+def has_adjacent_symbol(table: list[str], row: int, start: int, end: int) -> bool:
+    # Check right
+    if end < len(table[row]) - 1:
+        end += 1
+        if table[row][end] != ".":
+            return True
 
-def part1(data):
-    nums, symbols = parse_input(data)
-    adj_nums = []
+    # Check left
+    if start > 0:
+        start -= 1
+        if table[row][start] != ".":
+            return True
 
-    for pos, _ in symbols.items():
-        r, c = pos
-        # adj_pos = [(r + x, c + y) for x, y in itertools.product([-1, 0, 1], repeat=2)]
-        adj_pos = [(r + x, c + y) for x in [-1, 0, 1] for y in [-1, 0, 1]]
-        adj_nums.extend([nums[pos] for pos in adj_pos if pos in nums])
+    # Check up
+    if row > 0:
+        for i in range(start, end + 1):
+            char = table[row - 1][i]
+            if char != "." and not char.isdigit():
+                return True
 
-    return sum(item[0] for item in set(adj_nums))
+    # Check down
+    if row < len(table) - 1:
+        for i in range(start, end + 1):
+            char = table[row + 1][i]
+            if char != "." and not char.isdigit():
+                return True
 
-def part2(data):
-    nums, symbols = parse_input(data)
-    _sums = 0
+    return False
 
-    for pos, symbol in symbols.items():
-        if symbol == "*":
-            r, c = pos
-            adj_pos = [(r + x, c + y) for x in [-1, 0, 1] for y in [-1, 0, 1]]
-            adj_nums = set([nums[pos] for pos in adj_pos if pos in nums])
-            if len(adj_nums) == 2:
-                _sums += math.prod([item[0] for item in adj_nums])
 
-    return _sums
+def part1(text: str) -> int:
+    table = text.splitlines()
+    total = 0
+    for i, row in enumerate(table):
+        number = ""
+        for j, c in enumerate(row):
+            if c.isdigit():
+                # Collect all digits.
+                number += c
+                # If we're at the end of the row,
+                # check if we have an adjacent symbol.
+                is_end = j == len(row) - 1
+                if is_end and has_adjacent_symbol(
+                    table=table,
+                    row=i,
+                    start=j - len(number) + 1,
+                    end=j,
+                ):
+                    total += int(number)
+            # If we're at a symbol, and we have a number,
+            # check if we have an adjacent symbol.
+            elif number:
+                if has_adjacent_symbol(
+                    table=table,
+                    row=i,
+                    start=j - len(number),
+                    end=j - 1,
+                ):
+                    total += int(number)
+                number = ""
+    return total
 
-def parse_input(data):
-    nums = {}
-    syms = {}
-    idx_num = 0
+def get_adjacent_numbers(
+    table: list[str], numbers: list[list[tuple[int, int]]], row: int, col: int
+) -> tuple[int, int] | None:
+    adjancent_numbers = set()
+    left_limit = col
+    right_limit = col
 
-    for r, line in enumerate(data):
-        line_nums = re.sub(r"\D", " ", line).split()
-        offset = 0
-        for n in line_nums:
-            pos = line.index(n, offset)
-            for step in range(len(n)):
-                nums[(r, pos + step)] = (int(n), idx_num)
-            offset = pos + len(n)
-            idx_num += 1
+    # Check right
+    if col < len(table[row]) - 1:
+        for start, end in numbers[row]:
+            if col + 1 == start:
+                adjancent_numbers.add((row, start, end))
+                break
+        right_limit += 1
 
-        line_syms = re.sub(r"[\d\.]", " ", line).split()
-        offset = 0
-        for sym in line_syms:
-            pos = line.index(sym, offset)
-            syms[(r, pos)] = sym
-            offset = pos + 1
+    # Check left
+    if col > 0:
+        for start, end in numbers[row]:
+            if col - 1 == end:
+                adjancent_numbers.add((row, start, end))
+                break
+        left_limit -= 1
 
-    return nums, syms
+    # Check up
+    if row > 0:
+        for i in range(left_limit, right_limit + 1):
+            char = table[row - 1][i]
+            if char.isdigit():
+                for start, end in numbers[row - 1]:
+                    if i >= start and i <= end:
+                        adjancent_numbers.add((row - 1, start, end))
+                        break
 
+    # Check down
+    if row < len(table) - 1:
+        for i in range(left_limit, right_limit + 1):
+            char = table[row + 1][i]
+            if char.isdigit():
+                for start, end in numbers[row + 1]:
+                    if i >= start and i <= end:
+                        adjancent_numbers.add((row + 1, start, end))
+                        break
+
+    if len(adjancent_numbers) == 2:
+        result = [
+            int(table[row][start : end + 1]) for row, start, end in adjancent_numbers
+        ]
+        return result[0], result[1]
+
+    return None
+
+
+def part2(text: str) -> int:
+    table = text.splitlines()
+    # Collect all numbers' positions.
+    numbers = [[] for _ in range(len(table))]
+    for i, row in enumerate(table):
+        number = ""
+        for j, c in enumerate(row):
+            if c.isdigit():
+                number += c
+                is_end = j == len(row) - 1
+                if is_end:
+                    numbers[i].append((j - len(number) + 1, j))
+            elif number:
+                numbers[i].append((j - len(number), j - 1))
+                number = ""
+
+    # Inspect each `*` symbol, and check if it has adjacent numbers.
+    total = 0
+    for i, row in enumerate(table):
+        for j, c in enumerate(row):
+            if c == "*":
+                adjacent_numbers = get_adjacent_numbers(
+                    table=table, numbers=numbers, row=i, col=j
+                )
+                if adjacent_numbers:
+                    total += adjacent_numbers[0] * adjacent_numbers[1]
+
+    return total
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

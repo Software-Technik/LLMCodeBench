@@ -1,59 +1,51 @@
 import sys
-from functools import reduce  # noqa: F401
 
 
 
-def part1(data):
-    points = 0
-    for line in data:
-        """
-        # original:
-        winning, yours = line.split(":")[1].split("|")
-        winning = set(winning.split())
-        yours = set(yours.split())
+def part1(text: str) -> int:
+    total = 0
+    for line in text.splitlines():
+        winning_numbers, numbers = line.split(":", maxsplit=1)[1].split("|", maxsplit=1)
+        winning_numbers = set(winning_numbers.split())
+        numbers = set(numbers.split())
+        resulted_numbers = winning_numbers.intersection(numbers)
+        if resulted_numbers:
+            total += 2 ** (len(resulted_numbers) - 1)
+    return total
 
-        # simplified using map:
-        winning, yours = map(lambda nums: set(nums.split()), line.split(":")[1].split("|"))
-        """
-        # more simplified:
-        winning, yours = map(set, map(str.split, line.split(":")[1].split("|")))
+cache = {}
 
-        """
-        # original:
-        matched_count = len(winning & yours)
-        if matched_count > 0:
-            points += 2 ** (matched_count - 1)
-        """
-        # simplified:
-        points += int(2 ** (len(winning & yours) - 1))
 
-    """
-    # one-liner
-    points = sum(int(2 ** (len(set.intersection(*map(set, map(str.split, line.split(":")[1].split("|"))))) - 1)) for line in data)
-    """
+def get_card_points(cards, card) -> int:
+    if card in cache:
+        return cache[card]
 
-    return points
+    total = cards[card]
+    for i in range(cards[card]):
+        total += get_card_points(cards, card + i + 1)
 
-def part2(data):
-    cards = [1] * len(data)
+    cache[card] = total
+    return total
 
-    for i, line in enumerate(data):
-        winning, yours = map(set, map(str.split, line.split(":")[1].split("|")))
-        matched_count = len(winning & yours)
-        for j in range(1, matched_count + 1):
-            cards[i + j] += cards[i]
 
-    """
-    # one-liner
-    cards = reduce(
-        lambda acc, cur: [v + [0, acc[cur[0]]][cur[0] < i <= sum(cur)] for i, v in enumerate(acc)],
-        [(i, len(set.intersection(*map(set, map(str.split, line.split(":")[1].split("|")))))) for i, line in enumerate(data)],
-        [1] * len(data),
-    )
-    """
-    return sum(cards)
+def part2(text: str) -> int:
+    cards = []
+    for line in text.splitlines():
+        winning_numbers, numbers = line.split(":", maxsplit=1)[1].split("|", maxsplit=1)
+        winning_numbers = set(winning_numbers.split())
+        numbers = set(numbers.split())
+        resulted_numbers = winning_numbers.intersection(numbers)
+        cards.append(len(resulted_numbers))
+
+    cache.clear()
+    total = 0
+    for i in range(len(cards)):
+        total += get_card_points(cards, i) + 1
+    return total
+
+
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

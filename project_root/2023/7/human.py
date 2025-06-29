@@ -1,58 +1,127 @@
 import sys
+from functools import cmp_to_key
+from collections import Counter
 
-def part1(data):
-    hands = [line.split() for line in data]
-    hands = [(label_to_number(hand[0]), int(hand[1]), get_score(hand[0])) for hand in hands]
-    hands = sorted(hands, key=lambda hand: (hand[2], hand[0]))
-    return sum(rank * hand[1] for rank, hand in enumerate(hands, 1))
+FIVE_OF_A_KIND = 7
+FOUR_OF_A_KIND = 6
+FULL_HOUSE = 5
+THREE_OF_A_KIND = 4
+TWO_PAIR = 3
+ONE_PAIR = 2
+HIGH_CARD = 1
 
-def part2(data):
-    hands = [line.split() for line in data]
-    hands = [(label_to_number(hand[0], wildcard=True), int(hand[1]), get_score(hand[0], wildcard=True)) for hand in hands]
-    hands = sorted(hands, key=lambda hand: (hand[2], hand[0]))
-    return sum(rank * hand[1] for rank, hand in enumerate(hands, 1))
+CARDS = {
+    "A": 14,
+    "K": 13,
+    "Q": 12,
+    "J": 11,
+    "T": 10,
+    "9": 9,
+    "8": 8,
+    "7": 7,
+    "6": 6,
+    "5": 5,
+    "4": 4,
+    "3": 3,
+    "2": 2,
+}
 
-def label_to_number(cards, wildcard=False):
-    mapping = {
-        "T": 10,
-        "J": 1 if wildcard else 11,
-        "Q": 12,
-        "K": 13,
-        "A": 14,
-    }
 
-    return [int(mapping.get(i, i)) for i in cards]
+def get_hand_type(hand):
+    counter = Counter(hand)
 
-def get_score(cards, wildcard=False):
-    types = {
-        50: "Five of a kind",
-        40: "Four of a kind",
-        32: "Full house",
-        30: "Three of a kind",
-        22: "Two pair",
-        20: "One pair",
-        10: "High card",
-    }
-    counter = {}
-    cards = list(cards)
+    if len(counter) == 1:
+        return FIVE_OF_A_KIND
 
-    jokers = 0
-    if wildcard:
-        jokers = cards.count("J")
-        cards = [i for i in cards if i != "J"]
+    if len(counter) == 2:
+        most_common = counter.most_common(1)[0][1]
+        if most_common == 4:
+            return FOUR_OF_A_KIND
+        if most_common == 3:
+            return FULL_HOUSE
 
-    for card in cards:
-        counter[card] = cards.count(card)
+    if len(counter) == 3:
+        most_common = counter.most_common(1)[0][1]
+        if most_common == 3:
+            return THREE_OF_A_KIND
+        if most_common == 2:
+            return TWO_PAIR
 
-    _max, _2nd = (sorted(counter.values(), reverse=True) + [0] * 5)[:2]
-    rank_score = 10 * (_max + jokers) + _2nd
-    rank_score = max(i for i in types.keys() if i <= rank_score)
+    if len(counter) == 4:
+        return ONE_PAIR
 
-    # using rank_score as the part of the key to sort the hands
-    # and types[rank_score] for the debug purpose
-    return rank_score, types[rank_score]
+    return HIGH_CARD
+
+def get_hand_type_with_jokers(hand):
+    hand_without_jokers = hand.replace("J", "")
+    jokers = len(hand) - len(hand_without_jokers)
+
+    hand_type = get_hand_type(hand_without_jokers)
+
+    if not jokers:
+        return hand_type
+
+    if hand_type == FOUR_OF_A_KIND:
+        return FIVE_OF_A_KIND
+
+    if hand_type == THREE_OF_A_KIND:
+        if jokers == 1:
+            return FOUR_OF_A_KIND
+        return FIVE_OF_A_KIND
+
+    if hand_type == TWO_PAIR:
+        return FULL_HOUSE
+
+    if hand_type == ONE_PAIR:
+        if jokers == 1:
+            return THREE_OF_A_KIND
+        if jokers == 2:
+            return FOUR_OF_A_KIND
+        return FIVE_OF_A_KIND
+
+    if jokers == 1:
+        return ONE_PAIR
+    if jokers == 2:
+        return THREE_OF_A_KIND
+    if jokers == 3:
+        return FOUR_OF_A_KIND
+    return FIVE_OF_A_KIND
+
+def cmp(a, b):
+    a = a[0]
+    b = b[0]
+    a_type = get_hand_type(a)
+    b_type = get_hand_type(b)
+
+    if a_type != b_type:
+        return a_type - b_type
+
+    for card_a, card_b in zip(a, b):
+        card_a = CARDS[card_a]
+        card_b = CARDS[card_b]
+        if card_a != card_b:
+            return card_a - card_b
+
+    return 0
+
+
+def part1(text: str) -> int:
+    cards = [line.split() for line in text.splitlines()]
+    cards = sorted(cards, key=cmp_to_key(cmp))
+    total = 0
+    for i, hand in enumerate(cards):
+        total += (i + 1) * int(hand[1])
+    return total
+
+def part2(text: str) -> int:
+    cards = [line.split() for line in text.splitlines()]
+    cards = sorted(cards, key=cmp_to_key(cmp))
+    total = 0
+    for i, hand in enumerate(cards):
+        total += (i + 1) * int(hand[1])
+    return total
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")
