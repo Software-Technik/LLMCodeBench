@@ -1,8 +1,5 @@
 import sys
-inout_strings = sys.argv[1]
 
-with open(inout_strings, 'r') as infile:
-    puzzle = infile.readlines()
 
 DIRECTIONS = {
     'R': 1,
@@ -26,28 +23,21 @@ KEYPAD_2 = [
 ]
 
 
-def find_solutions(second_part=False):
+def part1(data):
     def is_inside(pos):
-        if not second_part:
-            return all(abs(coord) <= 1 for coord in {pos.real, pos.imag})
-        else:
-            return abs(pos.real) + abs(pos.imag) <= 2
+        return all(abs(coord) <= 1 for coord in {pos.real, pos.imag})
 
     def get_key(pos):
         return str(keypad[int(pos.imag)][int(pos.real)])
 
 
-    if not second_part:
-        keypad = KEYPAD_1
-        offset = 1+1j   # the center of the keypad
-        pos = 0+0j      # start from the 5, in the center
-    else:
-        keypad = KEYPAD_2
-        offset = 2+2j   # the center of the keypad
-        pos = -2+0j     # start from the 5, two left from the center
+    keypad = KEYPAD_1
+    offset = 1+1j   # the center of the keypad
+    pos = 0+0j      # start from the 5, in the center
+    # start from the 5, two left from the center
 
     key_positions = []
-    for line in puzzle:
+    for line in data:
         for direction in line.strip():
             new = pos + DIRECTIONS[direction]
             pos = new if is_inside(new) else pos
@@ -55,4 +45,32 @@ def find_solutions(second_part=False):
 
     return ''.join(get_key(pos+offset) for pos in key_positions)
 
-print(find_solutions(), find_solutions(second_part=True))
+
+def part2(data):
+    def is_inside(pos):
+        return abs(pos.real) + abs(pos.imag) <= 2
+
+    def get_key(pos):
+        return str(keypad[int(pos.imag)][int(pos.real)])
+
+
+    keypad = KEYPAD_2
+    offset = 2+2j   # the center of the keypad
+    pos = -2+0j     # start from the 5, two left from the center
+
+    key_positions = []
+    for line in data:
+        for direction in line.strip():
+            new = pos + DIRECTIONS[direction]
+            pos = new if is_inside(new) else pos
+        key_positions.append(pos)
+
+    return ''.join(get_key(pos+offset) for pos in key_positions)
+
+
+inout_strings = sys.argv[1]
+
+with open(inout_strings) as f:
+    data = f.readlines()
+
+sys.stdout.write(f"{part1(data)} {part2(data)}") 

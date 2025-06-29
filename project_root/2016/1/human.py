@@ -1,31 +1,29 @@
 import sys
 
-inout_strings = sys.argv[1]
 
-with open(inout_strings) as f:
-    data = f.read()
-inputs = list(map(str.strip, data.split(',')))
 
 # Part one
-location = 0 + 0j
-current_direction = 1j
-for i in inputs:
-    turn_direction = i[0]
-    distance = int(i[1:])
-    if turn_direction == 'R':
-        current_direction *= -1j
-    else:
-        current_direction *= 1j
-    location += current_direction * distance
-#print(abs(location.real) + abs(location.imag))
+def part1(data):
+    location = 0 + 0j
+    current_direction = 1j
+    for i in data:
+        turn_direction = i[0]
+        distance = int(i[1:])
+        if turn_direction == 'R':
+            current_direction *= -1j
+        else:
+            current_direction *= 1j
+        location += current_direction * distance
+    return abs(location.real) + abs(location.imag)
+
 
 
 # Part two
-def first_visited():
+def part2(data):
     location = 0 + 0j
     current_direction = 1j
     visited = set()
-    for i in inputs:
+    for i in data:
         turn_direction = i[0]
         distance = int(i[1:])
         if turn_direction == 'R':
@@ -37,6 +35,13 @@ def first_visited():
             if location in visited:
                 return abs(location.real) + abs(location.imag)
             visited.add(location)
+    
 
+inout_strings = sys.argv[1]
 
-print(abs(location.real) + abs(location.imag), first_visited())
+with open(inout_strings) as f:
+    data = f.read()
+    
+data = list(map(str.strip, data.split(',')))
+
+sys.stdout.write(f"{part1(data)} {part2(data)}") 

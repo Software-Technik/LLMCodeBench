@@ -1,24 +1,40 @@
 import sys
 import re
 
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r') as infile:
-    compressed = infile.read()
 
 pattern = re.compile(r'\((\d+)x(\d+)\)')
 
-def unzip(s, second_part=False):
-    parens = pattern.search(s)
+
+def part1(data):
+    parens = pattern.search(data)
     if not parens:
-        return len(s)
+        return len(data)
     length = int(parens.group(1))
     times = int(parens.group(2))
     start = parens.start() + len(parens.group())
-    count = unzip(s[start:start+length], True) if second_part else length
+    count = length
 
-    return (len(s[:parens.start()])
+    return (len(data[:parens.start()])
             + times * count
-            + unzip(s[start+length:], second_part))
+            + part1(data[start+length:]))
 
 
-print(unzip(compressed), unzip(compressed, second_part=True))
+def part2(data):
+    parens = pattern.search(data)
+    if not parens:
+        return len(data)
+    length = int(parens.group(1))
+    times = int(parens.group(2))
+    start = parens.start() + len(parens.group())
+    count = part2(data[start:start+length])
+
+    return (len(data[:parens.start()])
+            + times * count
+            + part2(data[start+length:]))
+
+
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r') as infile:
+    data = infile.read()
+
+sys.stdout.write(f"{part1(data)} {part2(data)}")     

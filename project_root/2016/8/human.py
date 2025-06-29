@@ -42,5 +42,4 @@ for i in range(10):
     output_part_2 += str(board[:, 5*i:5*i+5])
     output_part_2 += "\n"
 
-
-print(board.sum(), output_part_2)
+sys.stdout.write(f"{board.sum()} {output_part_2}") 
