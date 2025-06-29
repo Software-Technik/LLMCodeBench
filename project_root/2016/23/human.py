@@ -63,10 +63,4 @@ def execute(a):
         i += 1
     return register['a']
 
-
-print('Assembunny code again? Not a problem for me.')
-print('If I start with 7 eggs in the register a, '
-     f'I get {execute(a=7)} as a final value for that register.')
-print('....')
-print('Oh! I should have started with 12 eggs in the register a!')
-print(f'Then I get {execute(a=12)} as a final value.')
+print(execute(a=7), execute(a=12))

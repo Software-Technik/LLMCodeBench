@@ -1,5 +1,13 @@
 
-START = list(map(int, '01110110101001000'))
+import sys
+
+# INPUT='01110110101001000'
+
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    INPUT = file.read().strip()
+
+START = list(map(int, INPUT))
 DISK_1 = 272
 DISK_2 = 35651584
 
@@ -21,8 +29,5 @@ def create_checksum(data):
 first = create_checksum(fill_disk(START, DISK_1))
 second = create_checksum(fill_disk(START, DISK_2))
 
-print("Let's fill the disk no. 1 with the 'random' data.")
-print("The checksum is:", first)
-print("....")
-print("Disk 2 is so much bigger!")
-print("Its checksum is", second)
+
+print(first, second)

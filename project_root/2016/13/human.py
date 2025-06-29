@@ -1,6 +1,10 @@
+import sys
 from collections import deque
 
-INPUT = 1364
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    INPUT = int(file.read().strip())
+
 GOAL = (31, 39)
 START = (1, 1)
 DELTAS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -30,8 +34,4 @@ def run_through_maze(second_part=False):
                 que.append(((nx, ny), steps+1))
 
 
-print("I'm really good with mazes!")
-print(f"I bet I can find cubicle {GOAL} in {run_through_maze()} steps!")
-print("....")
-print("Give me some time, and in just 50 steps from the start "
-      f"I'll visit {run_through_maze('second')} different cubicles!")
+print(run_through_maze(), run_through_maze('second'))

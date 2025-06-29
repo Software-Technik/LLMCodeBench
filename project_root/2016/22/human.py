@@ -1,63 +1,247 @@
-import sys
-import re
-import numpy as np
+import re, sys
+from heapq import heapify, heappop, heappush
+from collections import namedtuple
+
+DF_RE = re.compile(r"""
+    node-x(\d+)-y(\d+)
+    \s+(\d+)T
+    \s+(\d+)T
+    \s+(\d+)T
+    """, re.VERBOSE)
+
+Node = namedtuple('Node', ['x', 'y', 'size', 'used', 'avail'])
+
+XSIZE, YSIZE = 32, 30
+
+INPUTFILE = sys.argv[1]
+
+def load_input(infile):
+    lines = []
+    with open(infile, 'r') as fp:
+        for line in fp:
+            line = line.strip()
+            if line:
+                lines.append(line)
+        return lines
+
+def parse_nodes(lines):
+    """Parse information about the available nodes from
+    the given lines of 'df' output.
+    A list of Node objects is returned.
+    """
+    nodes = []
+    for line in lines:
+        m = DF_RE.search(line)
+        if m:
+            node = Node(*m.groups())
+            nodes.append(Node(*m.groups()))
+    assert(len(nodes) > 0)
+    return nodes
+
+class State(object):
+    def __init__(self, nodes):
+        self.xsize = 0
+        self.ysize = 0
+        self._size = []
+        self._used = []
+        self.history = []
+        self._load_nodelist(nodes)
+        self.goal = (self.xsize - 1, 0)
+
+    def score(self):
+        """Return a score based on the length of the search path, so far,
+        and a heuristic estimating the minimum number of steps required
+        to reach the goal state.
+
+        TODO: This heuristic is not admissable, but happens to work for
+        this particular problem anyway. :-(  #FIXME
+        """
+        xg, yg = self.goal
+        xe, ye = self.empty_node()
+        score = len(self.history) + 4*(xg + yg)
+        if xg == 1:
+            score -= 3
+        if ye > 1:
+            score += ye - 1
+        dx = abs(xe - xg + 1)
+        if xg and dx:
+            score += dx
+        return score
+
+    def save(self):
+        return (self.goal, tuple([tuple(row) for row in self._used]))
+
+    def key(self):
+        return (self.goal, tuple([tuple([v > 0 for v in row]) for row in self._used]))
+
+    def used(self, xy):
+        x, y = xy
+        return self._used[y][x]
+
+    def avail(self, xy):
+        x, y = xy
+        return self._size[y][x] - self._used[y][x]
+
+    def size(self, xy):
+        x, y = xy
+        return self._size[y][x]
+
+    def done(self):
+        """Has the goal been met?"""
+        return self.goal == (0, 0)
+
+    def apply(self, xy0, xy1):
+        """Move all data on node xy0 (x0, y0) to node xy1 (x1, y1).
+        An exception is raised if the move is not possible.
+        """
+        x0, y0 = xy0
+        x1, y1 = xy1
+        data_size = self._used[y0][x0]
+        assert(self._used[y1][x1] + data_size <= self._size[y1][x1])
+        self.history.append((xy0, xy1, data_size))
+        self._used[y1][x1] += data_size
+        self._used[y0][x0] = 0
+        if self.goal == xy0:
+            self.goal = xy1
+
+    def undo(self):
+        """Undo the last data move."""
+        if self.history:
+            xy0, xy1, data_size = self.history.pop()
+            x0, y0 = xy0
+            x1, y1 = xy1
+            self._used[y1][x1] -= data_size
+            self._used[y0][x0] = data_size
+            if self.goal == xy1:
+                self.goal = xy0
+
+    def restore(self, key, history):
+        """Rewind the history, and then apply the given moves."""
+        self.goal, used = key
+        self._used = []
+        for row in used:
+            self._used.append(list(row))
+        self.history = list(history)
+
+    def _load_nodelist(self, nodes):
+        xmax, ymax = 0, 0
+        for node in nodes:
+            x, y = int(node.x), int(node.y)
+            if x > xmax:
+                xmax = x
+            if y > ymax:
+                ymax = y
+        self.ysize = ymax + 1
+        self.xsize = xmax + 1
+        for y in range(self.ysize):
+            self._size.append([0] * self.xsize)
+            self._used.append([0] * self.xsize)
+        for node in nodes:
+            x, y = int(node.x), int(node.y)
+            self._size[y][x] = int(node.size)
+            self._used[y][x] = int(node.used)
+
+    def empty_node(self):
+        nodes = [(x, y)
+                for x in range(self.xsize) for y in range(self.ysize)
+                if self._used[y][x] == 0]
+        assert(len(nodes) == 1)
+        return nodes[0]
+
+    def moves(self, teleport=False):
+        """Return a list of moves available from the currnet state."""
+        recv = [(self._size[y][x] - self._used[y][x], x, y)
+                for x in range(self.xsize) for y in range(self.ysize)]
+        recv.sort(reverse=True)
+        send = [(self._used[y][x], x, y)
+                for x in range(self.xsize) for y in range(self.ysize)
+                if self._used[y][x] > 0]
+        send.sort()
+        # print("recv: {}...".format(str(recv[:5])))
+        # print("send: {}...".format(str(send[:5])))
+        moves = []
+        for avail, x1, y1 in recv:
+            for used, x0, y0 in send:
+                if avail < used:
+                    break
+                if teleport or (x0 == x1 and abs(y0 - y1) == 1) or (
+                                y0 == y1 and abs(x0 - x1) == 1):
+                    self.apply((x0, y0), (x1, y1))
+                    moves.append((self.score(), self.key(), self.save(), list(self.history)))
+                    self.undo()
+        return moves
 
 
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r') as infile:
-    lines = infile.read().split('\n')
+def search(state):
+    """Find a series of moves that result in the goal data being
+    moved to node (0, 0).
 
-avail = []
-used = []
-grid = [['.' for _ in range(33)] for _ in range(30)]
+    The given state is modified in the course of the search, but will
+    be restored to its original state when the search completes.
 
-for line in lines[2:]:
-    sizes = re.search(r'x(\d+)-y(\d+).+T\s+(\d+)T\s+(\d+)T\s+\d+%', line)
-    x = int(sizes.group(1))
-    y = int(sizes.group(2))
-    usd = int(sizes.group(3))
-    avl = int(sizes.group(4))
-    used.append(usd)
-    avail.append(avl)
-    if usd > 100:
-        grid[y][x] = '#'
-    elif usd == 0:
-        grid[y][x] = '_'
+    A history of the required moves is returned.
+    """
+    init_key =  state.key()
+    visited = set(state.key())
+    queue = state.moves()
+    heapify(queue)
+    total_states = 1
+    while queue:
+        score, key, saved, path = heappop(queue)
+        if key in visited:
+            continue
+        state.restore(saved, path)
+        empty = state.empty_node()
+        #print("[{}] score:{} goal:{} empty:{} moves:{}  (queue size {})".format(
+         #   total_states, score, state.goal, empty, len(path), len(queue)))
+        if state.done():
+            history = list(state.history)
+            break
+        visited.add(key)
+        total_states += 1
+        for move in state.moves():
+            heappush(queue, move)
+        if total_states > 100000:
+            history = []
+            break
 
-grid[0][-1] = 'G'
-grid[0][0] = 'F'
+    state.restore(init_key, [])
+    return history
+
+# PART 1
+
+def part1(lines):
+    nodes = parse_nodes(lines)
+    state = State(nodes)
+    moves = list(state.moves(teleport=True))
+   # print("{} teleport moves available in the initial state".format(
+   #     len(moves)))
+    assert(len(moves) == 952)
+    #print('- ' * 32)
+
+    moves = list(state.moves())
+    #print("{} legal moves available in the initial state".format(len(moves)))
+    for score, key, saved, path in moves:
+        xy0, xy1, data_size = path[-1]
+      #  print("Move {} units from {} to {} ({} available)".format(
+       #     state.used(xy0), str(xy0), str(xy1), state.avail(xy1)))
+   #print('= ' * 32)
 
 
-print("Let's examine top 10 disks regarding free space:")
-print(sorted(avail, reverse=True)[:10])
-print("And let's see 10 disks with the least amount of data:")
-print(sorted(used)[:10])
-print("This means that only one disk can be used as a 'reciever'.")
+# PART 2
 
-uss = np.array(used)
-print(f"There are {sum((uss <= 94) & (uss > 0))} viable pairs of nodes.")
-print('....')
+def part2(lines):
+    nodes = parse_nodes(lines)
+    state = State(nodes)
+    path = search(state)
+   # print("Solution found in {} moves".format(len(path)))
+    step = 0
+    for xy0, xy1, data_size in path:
+        step += 1
+        #print("step {:3d}: move {}T from {} to {}".format(step, data_size,
+            #str(xy0), str(xy1)))
+   # print('= ' * 32)
 
-print('I should plot the map of this storage cluster!')
-for line in grid:
-    print(''.join(line))
-print("Now I see it, it's quite easy, I need to bypass this wall, "
-      "then go to the top right, and then it is just repeat repeat repeat "
-      "until I get to top-left corner.")
-
-
-start = (len(grid)-1, grid[-1].index('_'))
-wall = (len(grid)-3, grid[-3].index('#')-1)
-goal = (0, len(grid[0])-1)
-finish = (0, 0)
-
-def get_manhattan(a, b):
-    x1, y1 = a
-    x2, y2 = b
-    return abs(x2 - x1) + abs(y2 - y1)
-
-steps = get_manhattan(start, wall)
-steps += get_manhattan(wall, goal)
-steps += 5 * (goal[1] - 1)
-
-print(f'And all that would be {steps} steps.')
+if __name__ == '__main__':
+    lines = load_input(INPUTFILE)
+    print(part1(lines), part2(lines))

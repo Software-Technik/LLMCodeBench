@@ -55,9 +55,4 @@ def find_solutions(second_part=False):
 
     return ''.join(get_key(pos+offset) for pos in key_positions)
 
-
-print("Ok, I've memorized the bathroom code:", find_solutions())
-print('....')
-print("Hmmm, this well-designed keypad is not the one I was expecting.")
-print("But let me try to open it with the same instuctions as before.")
-print("Here's the new code:", find_solutions(second_part=True))
+print(find_solutions(), find_solutions(second_part=True))

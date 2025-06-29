@@ -52,11 +52,4 @@ for start in points[:-1]:
         gl = int(goal)
         distances[st][gl] = distances[gl][st] = dist
 
-
-print('Wow, this robot is very slow! '
-      'I better find the shortest path from here to all needed locations.')
-print(f'That should be this path that takes {find_shortest()} steps.')
-print('....')
-print('Oh, I forgot my robot in the middle of the maze!')
-print("I'll send another one, let me just first recalculate the shortest path.")
-print(f'The shortest path with returning here takes {find_shortest(2)} steps.')
+print(find_shortest(), find_shortest(2))

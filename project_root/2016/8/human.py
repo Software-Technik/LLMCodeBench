@@ -1,31 +1,46 @@
-import sys
 import numpy as np
-# import matplotlib.pyplot as plt
+import re, sys
 
 inout_strings = sys.argv[1]
+with open(inout_strings, 'r') as f:
+    commands = [x.strip() for x in f.readlines()]
 
-with open(inout_strings, 'r') as infile:
-    instructions = infile.read().split('\n')
+# Part one
 
-lcd = np.zeros((6, 50))
+board = np.zeros((6, 50))
 
-for line in instructions:
-    if line.startswith('rect'):
-        width, height = map(int, line.split()[1].split('x'))
-        lcd[:height, :width] = 1
-    elif line.startswith('rotate'):
-        _, ax, pos, _, shift = line.split()
-        pos = int(pos.split('=')[1])
-        shift = int(shift)
-        if ax == 'row':
-            lcd[pos] = np.roll(lcd[pos], shift)
+
+def run_command(command):
+    if command.startswith('rect'):
+        match = re.search('(\d+)x(\d+)', command)
+        groups = match.groups(0)
+        wide = int(groups[0])
+        tall = int(groups[1])
+        board[:tall, :wide] = 1
+    elif command.startswith('rotate'):
+        match = re.search('=(\d+) by (\d+)', command)
+        groups = match.groups(0)
+        num = int(groups[0])
+        shift = int(groups[1])
+        if 'row' in command:
+            board[num] = np.roll(board[num], shift)
         else:
-            lcd[:, pos] = np.roll(lcd[:, pos], shift)
+            board[:, num] = np.roll(board[:, num], shift)
 
-print('Oh, look at all those {:0.0f} blinking lights!'.format(np.sum(lcd)))
-print('....')
-print('If I squint my eyes, I might be able to read the code from the screen....\n')
-print('\n'.join(' '.join('#' if on else ' ' for on in line) for line in lcd))
 
-# plt.imshow(lcd, cmap='viridis')
-# plt.show()
+for command in commands:
+    run_command(command)
+
+# print(board.sum())
+
+# Part two
+
+output_part_2 = ""
+
+for i in range(10):
+    output_part_2 += "\n"
+    output_part_2 += str(board[:, 5*i:5*i+5])
+    output_part_2 += "\n"
+
+
+print(board.sum(), output_part_2)

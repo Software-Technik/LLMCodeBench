@@ -21,8 +21,4 @@ def unzip(s, second_part=False):
             + unzip(s[start+length:], second_part))
 
 
-print("Let's do a quick decompression of this file....")
-print(f"Its decompressed size is {unzip(compressed)} characters.")
-print('....')
-print("Hmmm, this still looks compressed. Let's decompress it fully.")
-print(f"Now it has {unzip(compressed, second_part=True)} characters.")
+print(unzip(compressed), unzip(compressed, second_part=True))

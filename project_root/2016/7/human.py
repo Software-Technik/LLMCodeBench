@@ -27,9 +27,4 @@ first_solution = sum(is_abba(sup) and not is_abba(hyp)
 second_solution = sum(is_ababab(sup, hyp)
                       for sup, hyp in zip(supernet, hypernet))
 
-
-print("Look at all those IP addresses. I wonder how many support TLS?")
-print(f"I would say somewhere around {first_solution} of them.")
-print("....")
-print("And the number of addresses which support SSL?")
-print(f"Only {second_solution} support SSL out of {len(addresses)} total.")
+print(first_solution, second_solution)

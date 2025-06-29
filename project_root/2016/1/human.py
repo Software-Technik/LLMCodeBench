@@ -1,39 +1,42 @@
 import sys
+
 inout_strings = sys.argv[1]
 
-with open(inout_strings, 'r') as infile:
-    directions = infile.readline().split(', ')
+with open(inout_strings) as f:
+    data = f.read()
+inputs = list(map(str.strip, data.split(',')))
 
-ROTATION = {
-    'L': 1j,
-    'R': -1j
-}
-
+# Part one
+location = 0 + 0j
 current_direction = 1j
-location = 0+0j
+for i in inputs:
+    turn_direction = i[0]
+    distance = int(i[1:])
+    if turn_direction == 'R':
+        current_direction *= -1j
+    else:
+        current_direction *= 1j
+    location += current_direction * distance
+#print(abs(location.real) + abs(location.imag))
 
-visited_locations = set()
-passed_twice = False
 
-
-def find_manhattan(loc):
-    return int(abs(loc.real) + abs(loc.imag))
-
-
-for instruction in directions:
-    rot, dist = instruction[0], int(instruction[1:])
-    current_direction *= ROTATION[rot]
-
-    for _ in range(dist):
-        location += current_direction
-        if not passed_twice and location in visited_locations:
-            print("This looks familiar! "
-                  f"I must have been at {location} before!")
-            print("The distance from the start is:", find_manhattan(location))
-            passed_twice = True
+# Part two
+def first_visited():
+    location = 0 + 0j
+    current_direction = 1j
+    visited = set()
+    for i in inputs:
+        turn_direction = i[0]
+        distance = int(i[1:])
+        if turn_direction == 'R':
+            current_direction *= -1j
         else:
-            visited_locations.add(location)
+            current_direction *= 1j
+        for _ in range(distance):
+            location += current_direction
+            if location in visited:
+                return abs(location.real) + abs(location.imag)
+            visited.add(location)
 
-print('....')
-print("Ok, I've come to the end of your instructions and I'm at:", location)
-print(f"That's {find_manhattan(location)} blocks away from the the start.")
+
+print(abs(location.real) + abs(location.imag), first_visited())
