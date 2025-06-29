@@ -1,40 +1,77 @@
 import sys
-import numpy as np
+from collections import defaultdict
 
-def find_reflection(array, part=1):
-    if part == 1:
-        test = lambda a, b: (a == b[::-1]).all()
-    else:
-        test = lambda a, b: (a != b[::-1]).sum() == 1
-    for i in range(1, len(array)):
-        l = min(len(array) - i, i)
-        if test(array[i - l : i], array[i : i + l]):
-            return i
-    return None
+NDIRS = {'>': 1, '^': -1j, '<': -1, 'v': 1j}
+n4 = lambda p: [p - 1j, p - 1, p + 1, p + 1j]
 
-def parse_input(text):
-    return [
-        np.array([[char for char in line.strip()] for line in block.strip().split("\n")])
-        for block in text.strip().split("\n\n")
-    ]
+def parse(text):
+    grid = {
+        x + 1j * y: c
+        for y, line in enumerate(text.strip().splitlines())
+        for x, c in enumerate(line.strip())
+    }
+    start = 1
+    end = max(p.real for p in grid) - 1 + 1j * max(p.imag for p in grid)
+    return grid, start, end
+
+def find_adjacent(start, grid, terminals, ndirs_enabled):
+    adj, q = [], [(start, 0, {start})]
+    while q:
+        p, l, seen = q.pop(0)
+        if p in terminals and p != start:
+            adj.append((p, l))
+            continue
+
+        neighbors = [n for n in n4(p) if n in grid and n not in seen and grid[n] != '#']
+        if len(neighbors) > 1 and p != start:
+            adj.append((p, l))
+            continue
+
+        for n in neighbors:
+            if ndirs_enabled and grid[n] in NDIRS and n + NDIRS[grid[n]] != p:
+                next_pos = n + NDIRS[grid[n]]
+                q.append((next_pos, l + 2, seen | {n, next_pos}))
+            elif grid[n] == '.' or not ndirs_enabled:
+                q.append((n, l + 1, seen | {n}))
+    return adj
+
+def build_graph(grid, start, end, ndirs_enabled):
+    graph, seen, q = defaultdict(list), set(), [start]
+    while q:
+        p = q.pop()
+        if p in seen:
+            continue
+        seen.add(p)
+        for n, l in find_adjacent(p, grid, [start, end], ndirs_enabled):
+            graph[p].append((n, l))
+            if n not in seen:
+                q.append(n)
+    return graph
+
+def longest_path(graph, start, end):
+    longest, q = 0, [(start, 0, {start})]
+    while q:
+        p, l, seen = q.pop()
+        if p == end:
+            longest = max(longest, l)
+            continue
+        for n, nl in graph[p]:
+            if n not in seen:
+                q.append((n, l + nl, seen | {n}))
+    return longest
 
 def part1(text):
-    arrays = parse_input(text)
-    return sum(
-        100 * y if (y := find_reflection(array)) is not None
-        else find_reflection(np.rot90(array, -1))
-        for array in arrays
-    )
+    grid, start, end = parse(text)
+    graph = build_graph(grid, start, end, ndirs_enabled=True)
+    return longest_path(graph, start, end)
 
 def part2(text):
-    arrays = parse_input(text)
-    return sum(
-        100 * y if (y := find_reflection(array, part=2)) is not None
-        else find_reflection(np.rot90(array, -1), part=2)
-        for array in arrays
-    )
+    grid, start, end = parse(text)
+    graph = build_graph(grid, start, end, ndirs_enabled=False)
+    return longest_path(graph, start, end)
 
-inout_strings = sys.argv[1]
-with open(inout_strings) as f:
-    text = f.read()
-sys.stdout.write(f"{part1(text)} {part2(text)}")
+if __name__ == "__main__":
+    inout_strings = sys.argv[1]
+    with open(inout_strings) as f:
+        text = f.read()
+    sys.stdout.write(f"{part1(text)} {part2(text)}")
