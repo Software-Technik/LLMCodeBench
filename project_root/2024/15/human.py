@@ -2,6 +2,7 @@ import sys
 
 
 def part1(lines):
+
     final_grid = [["."] * (50) for _ in range(len(lines[0]) - 1)]
 
     def move_from_to(from_row, from_col, go_row, go_col, final_grid):
@@ -86,7 +87,7 @@ def part1(lines):
             # Down
             move_from_to(robot_row, robot_col, 1, 0, final_grid)
             continue
-        return boxPoints(final_grid)
+    return boxPoints(final_grid)
 
 
 def part2(lines):
@@ -243,8 +244,6 @@ def part2(lines):
             for i in line:
                 moves.append(i)
 
-    # print(final_grid)
-    # print(moves)
     temp_grid = [["."] * (100) for _ in range(len(lines[0]) - 1)]
     for row in range(len(final_grid)):
         for col in range(len(final_grid[0])):
@@ -278,8 +277,6 @@ def part2(lines):
 
     for move in moves:
         robot_row, robot_col = findRobotCoords(final_grid)
-        # print(final_grid)
-        # print("\n\n")
         if move == "<":
             # print("Move:", move)
             # Left
