@@ -68,3 +68,4 @@ with open(input_strings) as f:
     data = [line.rstrip('\n') for line in f]
 
 sys.stdout.write(f"{part1(data)}\n{part2(data)}\n")
+
