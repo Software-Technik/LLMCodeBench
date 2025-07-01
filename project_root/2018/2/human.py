@@ -36,7 +36,7 @@ if __name__ == "__main__":
     data_lines = data.strip().splitlines()
     
     checksum = get_checksum(data_lines)
-    print(f"The checksum is: {checksum}")
 
     common_letters = get_common_letters(data_lines)
-    print(f"The common letters are: {common_letters}")
+
+    sys.stdout.write(f"{checksum} {common_letters}") 

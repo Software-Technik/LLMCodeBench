@@ -62,5 +62,4 @@ while data:
         header = False
 
 
-print(checksum)
-print(tree[0].value)
+sys.stdout.write(f"{checksum} {tree[0].value}") 

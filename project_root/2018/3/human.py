@@ -59,5 +59,4 @@ if __name__ == "__main__":
     overlap_squares = day3_part1(data_lines)
     claim_without_overlap = day3_part2(data_lines)
 
-    print(f"The number of squares with overlap: {overlap_squares}")
-    print(f"Claim with no overlap: {claim_without_overlap}")
+    sys.stdout.write(f"{overlap_squares} {claim_without_overlap}") 

@@ -25,7 +25,6 @@ cave[x, y] = depth
 
 cave_type = cave % 3
 
-print(f"Answer part  I: {cave_type[:x+1, :y+1].sum()}")
 
 grid = nx.Graph()
 
@@ -51,4 +50,4 @@ for (r, c), t in np.ndenumerate(cave_type):
             grid.add_edge((r, c, s), (r, c+1, s), weight=1)
 
 
-print(f"Answer part II: {nx.shortest_path_length(grid, (0, 0, 0), (x, y, 0), weight='weight')}")
+sys.stdout.write(f"{cave_type[:x+1, :y+1].sum()} {nx.shortest_path_length(grid, (0, 0, 0), (x, y, 0), weight='weight')}") 

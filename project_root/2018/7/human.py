@@ -143,15 +143,15 @@ def work(fn: str, worker_ids: str, n_workers: int=1, base_effort: int=0) -> tupl
 
 if __name__ == "__main__":
     inout_strings = sys.argv[1]
-    answer1, time = work(inout_strings,
+    answer1, time1 = work(inout_strings,
                          ascii_uppercase,
                          n_workers=1,
                          base_effort=0)
 
-    order, answer2 = work(inout_strings,
+    order, time2 = work(inout_strings,
                           ascii_uppercase,
                           n_workers=5,
                           base_effort=60)
 
-    print(f"Part I  task order: {answer1}    time: {time}")
-    print(f"Part II task order: {order}    time: {answer2}")
+
+    sys.stdout.write(f"{time1} {time2}") 

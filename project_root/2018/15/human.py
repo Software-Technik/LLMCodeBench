@@ -179,11 +179,7 @@ class Move:
 
 if __name__ == "__main__":
     inout_strings = sys.argv[1]
-    print("Part one")
     board = Board(inout_strings)
-    print(f"Answer = {board.play_game(preserve_elves=False)}")
-
-    print("Part two")
     damage = 4
     while True:
         board = Board(inout_strings, damage)
@@ -191,4 +187,5 @@ if __name__ == "__main__":
         if result:
             break
         damage += 1
-    print(f"Answer = {result}")
+
+    sys.stdout.write(f"{board.play_game(preserve_elves=False)} {result}") 

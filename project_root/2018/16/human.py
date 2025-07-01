@@ -112,7 +112,7 @@ for sample in parse_samples(sample):
     counts.append(count)
     i, func_set = funcs
     functions[i] = functions[i] & func_set
-print("Part I :", sum(v for k, v in Counter(counts).items() if k >= 3))
 
 out = reg_op.run_program(program, functions)
-print(f"Part II: {out[0]}")
+
+sys.stdout.write(f"{sum(v for k, v in Counter(counts).items() if k >= 3)} {out[0]}") 

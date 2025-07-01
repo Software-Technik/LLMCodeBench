@@ -134,5 +134,4 @@ if __name__ == "__main__":
             cursor = spread_water(cursor, ground)
             cursors.update(cursor)
 
-    print(f"Part  I: {np.isin(ground[y_min:,:], ['|', '~']).sum()}")
-    print(f"Part II: {(ground[y_min:,:] == '~').sum()}")
+    sys.stdout.write(f"{np.isin(ground[y_min:,:], ['|', '~']).sum()} {(ground[y_min:,:] == '~').sum()}") 

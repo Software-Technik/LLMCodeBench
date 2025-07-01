@@ -133,16 +133,14 @@ class Army:
 input_f = sys.argv[1]
 # Part I
 disease = Disease(input_f)
-found, result = disease.battle()
-print(f"Answer part  I: {result}")
-
+found, result1 = disease.battle()
 
 
 # Part II
 for boost in range(10000):
     body = Disease(input_f, boost)
-    found, result = body.battle()
+    found, result2 = body.battle()
     if found:
         break
 
-print(f"Answer part II: {result} (with boost={boost})")
+sys.stdout.write(f"{result1} {result2}") 

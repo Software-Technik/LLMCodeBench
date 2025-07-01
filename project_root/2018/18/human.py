@@ -123,6 +123,5 @@ if __name__ == "__main__":
     input_f = sys.argv[1]
     collection_area = Lumberyard(input_f)
     collection_area.run_until_cycle()
-    assert(collection_area.answer_one == 589931)
-    assert(collection_area.answer_two == 222332)
 
+    sys.stdout.write(f"{collection_area.answer_one} {collection_area.answer_two}") 

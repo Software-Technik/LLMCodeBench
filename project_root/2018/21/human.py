@@ -105,5 +105,4 @@ input_f = sys.argv[1]
 reg_op = RegisterOperations()
 reg_op.load_program(input_f)
 
-print(f"Answer part  I: {reg_op.run_program_one()}")
-print(f"Answer part II: {reg_op.run_program_two()}")
+sys.stdout.write(f"{reg_op.run_program_one()} {reg_op.run_program_two()}") 

@@ -26,5 +26,5 @@ for i, j in itertools.product(range(314), range(314)):
 
 largest_area = max(count for key, count in counts.items() if key not in edge)
 
-print(f"The largest area is: {largest_area}")
-print(f"The number of safe locations: {close_locations}")
+
+sys.stdout.write(f"{largest_area} {close_locations}") 

@@ -34,7 +34,7 @@ if __name__ == "__main__":
     data_lines = data.strip().splitlines()
 
     frequency = get_frequency(data_lines)
-    print(f"After one modulation cycle, the frequency is: {frequency}")
 
     repeating_frequency = first_repeat(data_lines)
-    print(f"The first repeating frequency is: {repeating_frequency}")
+
+    sys.stdout.write(f"{frequency} {repeating_frequency}") 

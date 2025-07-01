@@ -64,7 +64,7 @@ if __name__ == "__main__":
     data_lines = data.strip().splitlines()
 
     answer1, chemicals2 = part_one2(data_lines, True)
-    print(f"After the reaction, the length is: {answer1}")
 
     answer2 = part_two_mp(chemicals2)
-    print(f"Post-reaction length after removing offender: {answer2}")
+
+    sys.stdout.write(f"{answer1} {answer2}") 

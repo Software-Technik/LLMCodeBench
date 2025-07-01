@@ -51,12 +51,7 @@ for guard, shifts in guards.items():
     totals.append(Total(guard, total, minute_sum))
 
 part1 = max(totals, key=lambda x: x.total)
-print("Day 4, part 1:")
-print(f"Guard #{part1.guard}, total: {part1.total}, minute: {part1.minute_sum.argmax()}")
-print(f"Answer: {part1.guard*part1.minute_sum.argmax()}")
 
-print("\nDay 4, part 2:")
 part2 = max(totals, key=lambda x: x.minute_sum.max())
-print(f"Guard #{part2.guard}, total: {part2.total}, minute: {part2.minute_sum.argmax()}")
-print(f"Answer: {part2.guard*part2.minute_sum.argmax()}")
 
+sys.stdout.write(f"{part1.guard*part1.minute_sum.argmax()} {part2.guard*part2.minute_sum.argmax()}") 

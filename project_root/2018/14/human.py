@@ -1,51 +1,37 @@
-import numpy as np
-from collections import deque
+import sys
 
-if __name__ == "__main__":
+def part1(file_path):
+    with open(file_path, 'r') as file:
+        target = int(file.readline().rstrip("\n"))
 
-    # recipes[0] = 3
-    # recipes[1] = 7
-    # a = 0
-    # b = 1
-    # length = 2
-    # while length < (stop+10):
-    #     a_num = recipes[a]
-    #     b_num = recipes[b]
-    #     to_add = str(a_num+b_num)
-    #     length += len(to_add)
-    #     recipes[length-len(to_add):length] = [int(n) for n in to_add]
-    #     a = (a + a_num + 1) % length
-    #     b = (b + b_num + 1) % length
-    # print("".join(str(n) for n in recipes[stop:stop+10]))
+    scores = [ 3, 7 ]
+    elf1, elf2 = 0, 1
+    limit = 10 + target
+    while (limit := limit-1):
+        scores += [ int(c) for c in str(scores[elf1] + scores[elf2]) ]
+        elf1 = (elf1 + scores[elf1] + 1) % len(scores)
+        elf2 = (elf2 + scores[elf2] + 1) % len(scores)
 
-    block_size = 1_000_000
+    return ''.join([ str(n) for n in scores[target:target+10] ])
 
-    recipes = np.zeros(block_size, dtype=int)
+def part2(file_path):
+    with open(file_path, 'r') as file:
+        num = int(file.readline().rstrip("\n"))
+    target = [ int(c) for c in str(num) ]
 
-    recipes[0] = 3
-    recipes[1] = 7
-    a = 0
-    b = 1
-    length = 2
-    to_find = "190221"
-    last_recipes = deque("37", maxlen=7)
-    blocks = 1
+    scores = [ 3, 7 ]
+    elf1, elf2 = 0, 1
+    cycle = 0
     while True:
-        a_num = recipes[a]
-        b_num = recipes[b]
-        to_add = str(a_num+b_num)
-        length += len(to_add)
-        recipes[length-len(to_add):length] = [int(n) for n in to_add]
-        a = (a + a_num + 1) % length
-        b = (b + b_num + 1) % length
-        last_recipes.extend(to_add)
-        if length >= 7:
-            to_check = "".join(last_recipes)
-            if to_find in to_check:
-                print(length - 7 + to_check.find(to_find))
-                break
-        if length > (blocks * block_size - 10):
-            print("Added block to array")
-            recipes = np.concatenate((recipes, np.zeros(block_size, dtype=int)))
-            blocks += 1
-    print("Done")
+        last_len = len(scores)
+        scores += [ int(c) for c in str(scores[elf1] + scores[elf2]) ]
+        elf1 = (elf1 + scores[elf1] + 1) % len(scores)
+        elf2 = (elf2 + scores[elf2] + 1) % len(scores)
+        # Note that it's possible to get more than one number added to scores
+        for idx in range(last_len+1, len(scores)+1):
+            if scores[idx-len(target):idx] == target:
+                return idx-len(target)
+
+
+inout_strings = sys.argv[1]
+sys.stdout.write(f"{part1(inout_strings)} {part2(inout_strings)}") 

@@ -20,4 +20,4 @@ for i in range(len(points)):
     for row in points_array[dt]:
         g.add_edge(origin, tuple(row))
 
-print(nx.number_connected_components(g))
+sys.stdout.write(f"{nx.number_connected_components(g)}") 

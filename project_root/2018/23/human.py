@@ -22,7 +22,6 @@ for i, line in enumerate(lines):
 # Code for part I
 strongest_drone = drones[drones[:, 3].argmax(axis=0), :][np.newaxis, :]
 cityblocks = distance.cdist(strongest_drone[:, 0:3], drones[:, 0:3], metric="cityblock")
-print(f"Answer part  I: {(cityblocks <= strongest_drone[:, 3]).sum()}")
 
 # Code for part II
 minima = drones.min(axis=0)
@@ -59,4 +58,4 @@ while True:
     z_min, z_max = z - span, z + span + 1
 
 
-print(f"Answer part II: {-candidate[1][1]}")
+sys.stdout.write(f"{(cityblocks <= strongest_drone[:, 3]).sum()} {-candidate[1][1]}") 

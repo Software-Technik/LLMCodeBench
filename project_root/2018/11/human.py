@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from itertools import product
 from operator import itemgetter
 
@@ -22,7 +23,6 @@ for (x, y) in product(range(1, 301), range(1, 301)):
 sums = rolling_sum(rolling_sum(grid).transpose()).transpose()
 x, y = np.unravel_index(sums.argmax(), sums.shape)
 
-print(f"Answer part  I: {x+1},{y+1}")
 
 powers = []
 for i in range(1, 301):
@@ -34,4 +34,5 @@ maximum = max(powers, key=itemgetter(0))
 x, y = maximum[1]
 size = maximum[2]
 
-print(f"Answer part II: {x},{y},{size}")
+
+sys.stdout.write(f"({x+1},{y+1}) ({x},{y},{size})") 

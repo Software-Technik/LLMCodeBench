@@ -1,34 +1,26 @@
+import re, sys
 from collections import deque
-import sys
 
-
-def play_marbles(players, last_marble):
+def run_game(players, last_marb):
+    scores = [0] * players
     circle = deque([0])
-    scores = [0]*players
-
-    for i in range(1, last_marble+1):
-        if i % 23:
-            circle.rotate(-2)
-            circle.appendleft(i)
-        else:
+    next_marble, player = 0, 0
+    while (next_marble := next_marble+1) != last_marb:
+        if (next_marble % 23) == 0:
             circle.rotate(7)
-            scores[i % players] += i + circle.popleft()
+            scores[player] += circle.popleft() + next_marble
+        else:
+            circle.rotate(-2)
+            circle.appendleft(next_marble)
+
+        player = (player+1) % players
 
     return max(scores)
 
+inout_strings = sys.argv[1]
+
+with open(inout_strings, 'r') as file:
+    players, last_marb = [ int(n) for n in re.findall(r'\d+', file.readline()) ]
 
 
-def do_test_cases_part_one(fn):
-    with open(fn) as f:
-        test_cases = [[int(n) for n in line.strip().split(",")] for line in f]
-
-        for case in test_cases:
-            players, last_marble, winning_score = case
-            result = play_marbles(players, last_marble)
-            print(result, winning_score)
-            #assert(result == winning_score)
-
-
-if __name__ == "__main__":
-    inout_strings = sys.argv[1]
-    do_test_cases_part_one(inout_strings)
+sys.stdout.write(f"{run_game(players, last_marb)} {run_game(players, last_marb * 100)}") 
