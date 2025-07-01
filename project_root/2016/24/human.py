@@ -52,4 +52,4 @@ for start in points[:-1]:
         gl = int(goal)
         distances[st][gl] = distances[gl][st] = dist
 
-print(find_shortest(), find_shortest(2))
+sys.stdout.write(f"{find_shortest()} {find_shortest(2)}")  

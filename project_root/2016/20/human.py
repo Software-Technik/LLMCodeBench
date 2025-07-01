@@ -1,10 +1,4 @@
 import sys
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r') as infile:
-    addresses = infile.read().split('\n')
-
-ips = sorted([tuple(map(int, address.split('-'))) for address in addresses])
-
 
 def find_lowest(ips):
     nr_available = 0
@@ -20,6 +14,12 @@ def find_lowest(ips):
     return the_lowest, nr_available
 
 
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r') as infile:
+    addresses = infile.read().split('\n')
+
+ips = sorted([tuple(map(int, address.split('-'))) for address in addresses])
+
 first, second = find_lowest(ips)
 
-print(first, second)
+sys.stdout.write(f"{first} {second}")  

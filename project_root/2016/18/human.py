@@ -1,8 +1,4 @@
 import sys
-inout_strings = sys.argv[1]
-
-with open(inout_strings, 'r') as infile:
-    first_row = infile.read()
 
 
 def count_safes(row, total_lines):
@@ -17,7 +13,11 @@ def count_safes(row, total_lines):
             row += '^' if left != right else '.'
     return first_solution, safe
 
+inout_strings = sys.argv[1]
 
-first, second = count_safes(first_row, 400000)
+with open(inout_strings, 'r') as infile:
+    data = infile.read()
 
-print(first, second)
+first, second = count_safes(data, 400000)
+
+sys.stdout.write(f"{first} {second}")  
