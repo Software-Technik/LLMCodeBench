@@ -6,13 +6,13 @@ from itertools import chain, combinations
 from copy import deepcopy
 import sys
 
-# input_path = sys.argv[1]
+input_path = sys.argv[1]
 
 # change to dir of script
 # os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# input_file = input_path
-input_file = r"project_root\2020\advent-of-code-2020-master\23\input.txt"
+input_file = input_path
+# input_file = r"project_root\2020\advent-of-code-2020-master\23\input.txt"
 if "s" in sys.argv:
     input_file = "input_small.txt"
 try:

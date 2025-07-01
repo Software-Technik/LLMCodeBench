@@ -13,7 +13,7 @@ input_path = sys.argv[1]
 
 try:
     with open(input_path) as f:
-    # with open(r"project_root\2020\advent-of-code-2020-master\10\input.txt") as f:
+    # with open(r"project_root\2020\10\input.txt") as f:
         data = f.read()  # entire file as string
         lines = data.splitlines()
 except:
@@ -90,7 +90,7 @@ paths = dict({0: 1})
 for s in srtd:
     paths[s] = sum([paths.get(s - d, 0) for d in [1, 2, 3]])
 # ans(paths[srtd[-1]])  # 13816758796288
-result2 = paths[186]
+result2 = paths[srtd[-1]]
 
 print(result1, result2)
 
@@ -106,7 +106,7 @@ only by ones and threes, which was not a constraint for part 2.
 
 """
 
-comb = combinations
+"""comb = combinations
 
 
 m = 189
@@ -181,4 +181,4 @@ memo_cache = dict()
 # base case: pool = 3 or 1
 pool = set(srtd)
 pool.add(0)
-pres = []
+pres = []"""

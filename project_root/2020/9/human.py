@@ -14,7 +14,7 @@ input_path = sys.argv[1]
 
 try:
     with open(input_path) as f:
-    # with open(r"project_root\2020\advent-of-code-2020-master\advent-of-code-2020-master\09\input.txt") as f:
+    # with open(r"project_root\2020\9\input.txt") as f:
         data = f.read()  # entire file as string
         lines = data.splitlines()
 except:
@@ -45,28 +45,26 @@ P, E, R, M = print, enumerate, range, map
 ## end of boilerplate
 
 result1 = 0
-def check25(lines):
-    global result1
-    goal = lines[-1]
-    for ai, a in enumerate(lines):
-        for bi, b in enumerate(lines):
-            if a + b == goal and ai != bi:
+def check25(prev25, goal):
+    for i, a in enumerate(prev25):
+        for j, b in enumerate(prev25):
+            if i != j and a + b == goal:
                 return True
-    # ans(goal)  # 25918798
-    result1 = goal
     return False
 
-
-offset = 26
-while offset < len(lines) - 1:
-    sl = lines[offset - 26 : offset]
-    if not check25(sl):
-        pass
-        # print(sl)
+offset = 25
+print(f"Lines length: {len(lines)}")
+print("Erste 30 Werte:", lines[:25])
+while offset < len(lines):
+    prev25 = lines[offset - 25 : offset]
+    goal = lines[offset]
+    if not check25(prev25, goal):
+        result1 = goal
+        break
     offset += 1
 
 
-goalie = 25918798
+goalie = result1
 
 start = 0
 end = 0

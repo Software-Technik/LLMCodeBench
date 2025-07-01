@@ -11,7 +11,7 @@ input_path = sys.argv[1]
 
 try:
     with open(input_path) as f:
-    # with open(r"project_root\2020\advent-of-code-2020-master\16\input.txt") as f:
+    # with open(r"project_root\2020\16\input.txt") as f:
         data = f.read()  # entire file as string
         lines = data.splitlines()
 except:

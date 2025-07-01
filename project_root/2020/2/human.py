@@ -4,7 +4,6 @@ input_path = sys.argv[1]
 
 lines = []
 with open(input_path) as f:
-# with open(input_path) as f:
     lines = [x.strip() for x in f.readlines()]
 # print(lines)
 
@@ -19,8 +18,8 @@ for entry in split:
     if entry[2].count(char) in rg:
         valid_count += 1
 
-# print(valid_count, len(split))  # 620 1000
-result1 = str(valid_count) + " " + str(len(split))
+# print(valid_count, len(split))  # 620
+result1 = str(valid_count)
 # part 2
 
 valid_count = 0

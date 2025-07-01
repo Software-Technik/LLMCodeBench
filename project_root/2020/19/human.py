@@ -152,7 +152,7 @@ for line in line_groups[1].split("\n"):
         pass
         # print(line, "not in")
 # ans(tot)  # 113
-print(tot)
+# print(tot)
 result1= tot
 # base case: all terminals, return
 # recursive case:

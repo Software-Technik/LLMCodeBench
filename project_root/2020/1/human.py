@@ -3,9 +3,9 @@ import sys
 
 nums = []
 
-# input_path = sys.argv[1]
-# with open(input_path) as f:
-with open(r"project_root\2020\advent-of-code-2020-master\1\input.txt") as f:
+input_path = sys.argv[1]
+with open(input_path) as f:
+# with open(r"project_root\2020\advent-of-code-2020-master\1\input.txt") as f:
     nums = [int(x.strip()) for x in f.readlines()]
 
 # print(nums)
