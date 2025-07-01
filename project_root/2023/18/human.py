@@ -1,126 +1,84 @@
 import sys
+import re
+
+UP = "U"
+DOWN = "D"
+RIGHT = "R"
+LEFT = "L"
+
+N_TO_DIRECTION = {
+    0: RIGHT,
+    1: DOWN,
+    2: LEFT,
+    3: UP,
+}
 
 
-def part1( data):
-    # return self.part1_org(data)
-    curr = (0, 0)
-    dirs = {
-        "U": (-1, 0),
-        "D": (1, 0),
-        "L": (0, -1),
-        "R": (0, 1),
-    }
-    points = [curr]
-    edges = 0
-
-    for line in data:
-        d, _l, c = line.split()
-        edges += int(_l)
-        end = tuple(a + int(_l) * b for a, b in zip(curr, dirs[d]))
-        points.append(end)
-        curr = end
-
-    return calc_area(points, edges)
-
-def part2( data):
-    curr = (0, 0)
-    dirs = {
-        "U": (-1, 0),
-        "D": (1, 0),
-        "L": (0, -1),
-        "R": (0, 1),
-    }
-    points = [curr]
-
-    edges = 0
-
-    for line in data:
-        d, _l, c = line.split()
-        d = "RDLU"[int(c[-2])]
-        _l = int(c[2:-2], 16)
-        edges += _l
-        end = tuple(a + _l * b for a, b in zip(curr, dirs[d]))
-        points.append(end)
-        curr = end
-
-    return calc_area(points, edges)
-
-def calc_area( points, edges):
+def area(points: list[tuple[int, int]]) -> float:
     """
-    Thanks and learnt from the references:
+    Get the area of a polygon using the shoelace formula.
 
-    https://www.reddit.com/r/adventofcode/comments/18l2nk2/2023_day_18_easiest_way_to_solve_both_parts/
-    https://www.reddit.com/r/adventofcode/comments/18l0qtr/comment/kdv3pvu/
-
-    https://en.wikipedia.org/wiki/Shoelace_formula
-    https://en.wikipedia.org/wiki/Pick%27s_theorem
-
-    1. calc the internal area using the shoelace formula (denote this as A)
-    2. according to pick's theorem, A = i(number of internal points) + b(number of boundary points)/2 - 1
-    3. so the number of internal points i = A - b/2 + 1
-    4. then the total area = i + b
-                            = A - b/2 + 1 + b
-                            = A + b/2 + 1
+    See https://en.wikipedia.org/wiki/Shoelace_formula.
     """
-    r = 0
-    for i in range(len(points) - 1):
-        y1, x1 = points[i]
-        y2, x2 = points[i + 1]
-        r += x1 * y2 - x2 * y1
+    overlaped_points = zip(points, points[1:] + [points[0]])
+    return abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in overlaped_points)) / 2
 
-    return abs(r) // 2 + edges // 2 + 1
 
-def part1_org( data):
-    curr = (0, 0)
-    dirs = {
-        "U": (-1, 0),
-        "D": (1, 0),
-        "L": (0, -1),
-        "R": (0, 1),
-    }
-    dig = [curr]
-    for line in data:
-        d, _l, c = line.split()
-        for i in range(int(_l)):
-            curr = tuple(map(sum, zip(curr, dirs[d])))
-            dig.append(curr)
+def part1(text: str) -> int:
+    lines = text.splitlines()
+    intersections: list[tuple[int, int]] = [(0, 0)]
 
-    min_y = min(dig, key=lambda x: x[0])[0]
-    max_y = max(dig, key=lambda x: x[0])[0]
-    min_x = min(dig, key=lambda x: x[1])[1]
-    max_x = max(dig, key=lambda x: x[1])[1]
+    steps = 0
+    for line in lines:
+        direction, n, *_ = line.split()
+        n = int(n)
+        point = intersections[-1]
+        steps += n
+        if direction == UP:
+            intersections.append((point[0] - n, point[1]))
+        elif direction == DOWN:
+            intersections.append((point[0] + n, point[1]))
+        elif direction == RIGHT:
+            intersections.append((point[0], point[1] + n))
+        elif direction == LEFT:
+            intersections.append((point[0], point[1] - n))
 
-    fills = 0
+    intersections.pop(-1)
+    # Use Pick's theorem to calculate inner points of the polygon,
+    # and add the number of steps to get the total number of points.
+    # See https://en.wikipedia.org/wiki/Pick's_theorem.
+    interior_points = area(intersections) - steps / 2 + 1
+    return int(interior_points + steps)
 
-    for i in range(min_y, max_y + 1):
-        x = 0
-        for j in range(min_x, max_x + 1):
-            if (i, j) in dig:
-                if (i - 1, j) in dig and (i + 1, j) in dig:
-                    x += 1
-                else:
-                    if (i + 1, j) in dig and (i, j + 1) in dig:  # F
-                        s = 0
-                        x += 1
-                    elif (i - 1, j) in dig and (i, j + 1) in dig:  # L
-                        s = 1
-                        x += 1
-                    else:
-                        if (i + 1, j) in dig and (i, j - 1) in dig:  # 7
-                            if s == 0:
-                                x += 1
-                            s = 0
-                        elif (i - 1, j) in dig and (i, j - 1) in dig:  # J
-                            if s == 1:
-                                x += 1
-                            s = 0
-            else:
-                if x % 2:
-                    fills += 1
+def part2(text: str) -> int:
+    lines = text.splitlines()
+    intersections: list[tuple[int, int]] = [(0, 0)]
 
-    return len(set(dig)) + fills
+    pattern = re.compile(r".+\(#([a-z0-9]+)\)")
+    steps = 0
+    for line in lines:
+        point = intersections[-1]
+        hex_color = pattern.match(line).group(1)
+        direction = N_TO_DIRECTION[int(hex_color[-1])]
+        n = int(hex_color[:-1], 16)
+        steps += n
+        if direction == UP:
+            intersections.append((point[0] - n, point[1]))
+        elif direction == DOWN:
+            intersections.append((point[0] + n, point[1]))
+        elif direction == RIGHT:
+            intersections.append((point[0], point[1] + n))
+        elif direction == LEFT:
+            intersections.append((point[0], point[1] - n))
+
+    intersections.pop(-1)
+    # Use Pick's theorem to calculate inner points of the polygon,
+    # and add the number of steps to get the total number of points.
+    # See https://en.wikipedia.org/wiki/Pick's_theorem.
+    interior_points = area(intersections) - steps / 2 + 1
+    return int(interior_points + steps)
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

@@ -1,84 +1,77 @@
 import sys
+from collections import defaultdict
 
+NDIRS = {'>': 1, '^': -1j, '<': -1, 'v': 1j}
+n4 = lambda p: [p - 1j, p - 1, p + 1, p + 1j]
 
+def parse(text):
+    grid = {
+        x + 1j * y: c
+        for y, line in enumerate(text.strip().splitlines())
+        for x, c in enumerate(line.strip())
+    }
+    start = 1
+    end = max(p.real for p in grid) - 1 + 1j * max(p.imag for p in grid)
+    return grid, start, end
 
-def part1(data):
-    maps = ("\n".join(data)).split("\n\n")
-    return sum(find_mirror(_map) for _map in maps)
+def find_adjacent(start, grid, terminals, ndirs_enabled):
+    adj, q = [], [(start, 0, {start})]
+    while q:
+        p, l, seen = q.pop(0)
+        if p in terminals and p != start:
+            adj.append((p, l))
+            continue
 
-"""
-rewrite my part2
-thoughts: if exactly one mirror is smudged
-then there will be exactly one difference between the two patterns
-"""
+        neighbors = [n for n in n4(p) if n in grid and n not in seen and grid[n] != '#']
+        if len(neighbors) > 1 and p != start:
+            adj.append((p, l))
+            continue
 
-def part2(data):
-    maps = ("\n".join(data)).split("\n\n")
-    return sum(find_mirror(_map, diff=1) for _map in maps)
+        for n in neighbors:
+            if ndirs_enabled and grid[n] in NDIRS and n + NDIRS[grid[n]] != p:
+                next_pos = n + NDIRS[grid[n]]
+                q.append((next_pos, l + 2, seen | {n, next_pos}))
+            elif grid[n] == '.' or not ndirs_enabled:
+                q.append((n, l + 1, seen | {n}))
+    return adj
 
-def find_mirror( _map, diff=0):
-    _map_h = _map.split("\n")
-    _map_v = ["".join(c) for c in zip(*_map_h)]
+def build_graph(grid, start, end, ndirs_enabled):
+    graph, seen, q = defaultdict(list), set(), [start]
+    while q:
+        p = q.pop()
+        if p in seen:
+            continue
+        seen.add(p)
+        for n, l in find_adjacent(p, grid, [start, end], ndirs_enabled):
+            graph[p].append((n, l))
+            if n not in seen:
+                q.append(n)
+    return graph
 
-    for pattern, weight in ((_map_h, 100), (_map_v, 1)):
-        for i in range(1, len(pattern)):
-            a, b = pattern[:i], pattern[i:]
-            a = "".join(a[::-1])
-            b = "".join(b)
-            if sum(x != y for x, y in zip(a, b)) == diff:
-                return i * weight
+def longest_path(graph, start, end):
+    longest, q = 0, [(start, 0, {start})]
+    while q:
+        p, l, seen = q.pop()
+        if p == end:
+            longest = max(longest, l)
+            continue
+        for n, nl in graph[p]:
+            if n not in seen:
+                q.append((n, l + nl, seen | {n}))
+    return longest
 
-    return -1
+def part1(text):
+    grid, start, end = parse(text)
+    graph = build_graph(grid, start, end, ndirs_enabled=True)
+    return longest_path(graph, start, end)
 
-"""
-original approach, a straight forward brute force way to find it
-have to find the original reflection position first
-then replace symbol one by one and find the new reflection position
-"""
+def part2(text):
+    grid, start, end = parse(text)
+    graph = build_graph(grid, start, end, ndirs_enabled=False)
+    return longest_path(graph, start, end)
 
-def part2_org(data):
-    maps = ("\n".join(data)).split("\n\n")
-    _sum = 0
-
-    for _map in maps:
-        ref_org = find_mirror_org(_map)
-        width = len(_map.split("\n")[0])
-
-        s = "#."
-        i, j = 0, 0
-        done = False
-
-        while not done:
-            pattern = _map.split("\n")
-            pattern[i] = pattern[i][:j] + s[(s.index(pattern[i][j]) + 1) % 2] + pattern[i][j + 1 :]
-            pattern = "\n".join(pattern)
-
-            ref = find_mirror_org(pattern, ref_org)
-            if ref > -1:
-                _sum += ref
-                done = True
-            i, j = i + (j + 1) // width, (j + 1) % width
-
-    return _sum
-
-def find_mirror_org( _map, ref_org=None):
-    _map_h = _map.split("\n")
-    _map_v = ["".join(c) for c in zip(*_map_h)]
-
-    for pattern, weight in ((_map_h, 100), (_map_v, 1)):
-        for i in range(1, len(pattern)):
-            a, b = pattern[:i], pattern[i:]
-            a = "".join(a[::-1])
-            b = "".join(b)
-            if a.startswith(b) or b.startswith(a):
-                ref = i * weight
-                if ref != ref_org:
-                    return ref
-
-    return -1
-
-
-inout_strings = sys.argv[1]
-with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+if __name__ == "__main__":
+    inout_strings = sys.argv[1]
+    with open(inout_strings) as f:
+        text = f.read()
+    sys.stdout.write(f"{part1(text)} {part2(text)}")

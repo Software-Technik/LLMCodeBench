@@ -1,98 +1,46 @@
 import sys
-from functools import cache
+import functools
 
+def parse(line):
+    s, groups = line.strip().split(" ")
+    lookup = {"#": 2, "?": 1, ".": 0}
+    return tuple(lookup[char] for char in s), tuple(int(g) for g in groups.split(","))
 
-def part1( data):
-    _sum = 0
+def match_beginning(data, length):
+    return all(x > 0 for x in data[:length]) and (
+        (len(data) == length) or data[length] < 2
+    )
 
-    for line in data:
-        springs, groups = line.split()
-        groups = tuple([*map(int, groups.split(","))])
-        _sum += get_possible_count(springs, groups)
+@functools.cache
+def count(data, blocks):
+    total = sum(blocks)
+    minimum = sum(x == 2 for x in data)
+    maximum = sum(x > 0 for x in data)
+    if minimum > total or maximum < total:
+        return 0
+    if total == 0:
+        return 1
+    if data[0] == 0:
+        return count(data[1:], blocks)
+    if data[0] == 2:
+        l = blocks[0]
+        if match_beginning(data, l):
+            if l == len(data):
+                return 1
+            return count(data[l + 1:], blocks[1:])
+        return 0
+    return count(data[1:], blocks) + count((2,) + data[1:], blocks)
 
-    return _sum
+def part1(text):
+    data = [parse(line) for line in text.strip().splitlines()]
+    return sum(count(*line) for line in data)
 
-def part2(data):
-    _sum = 0
+def part2(text):
+    data = [parse(line) for line in text.strip().splitlines()]
+    return sum(count(((chars + (1,)) * 5)[:-1], blocks * 5) for chars, blocks in data)
 
-    for line in data:
-        springs, groups = line.split()
-
-        springs = "?".join([springs] * 5)
-        groups = ",".join([groups] * 5)
-        groups = tuple([*map(int, groups.split(","))])
-
-        _sum += get_possible_count(springs, groups)
-
-    return _sum
-
-@cache
-def get_possible_count(springs: str, groups: tuple, prev_size=0, must_operational=False) -> int:
-    # if there are no more springs left
-    if springs == "":
-        # if there are still groups left
-        if groups:
-            # if only one group left and it matches the previous counted size
-            if len(groups) == 1 and groups[0] == prev_size:
-                return 1  # last group matches the previous counted size, valid
-            return 0  # no springs left but still groups, impossible
-        else:
-            # no springs and no groups left
-            if prev_size == 0:
-                return 1  # no previous size, valid
-            else:
-                return 0  # impossible situation
-
-    # no more groups left
-    if len(groups) == 0:
-        # if there a remaining springs, it's impossible
-        if "#" in springs or prev_size > 0:
-            return 0
-        return 1  # no more springs, valid
-
-    # deal with the current spring
-    curr = springs[0]
-    rest = springs[1:]
-
-    # if current spring is "?", it could be either "#" or "."
-    if curr == "?":
-        return get_possible_count("#" + rest, groups, prev_size, must_operational) + get_possible_count("." + rest, groups, prev_size, must_operational)
-
-    # if current spring is "#" (damaged)
-    if curr == "#":
-        # shouldn't be a operational spring (i.e. ".")
-        if must_operational:
-            return 0
-
-        # current size
-        curr_size = prev_size + 1
-
-        # check current size against the group
-        if curr_size > groups[0]:  # exceeds the group count, impossible
-            return 0
-        elif curr_size == groups[0]:  # matches the group count, clear the prev size, next spring must be operational
-            return get_possible_count(rest, groups[1:], 0, True)
-        else:  # current size is less than the group count, keep counting, next spring can't be operational
-            return get_possible_count(rest, groups, curr_size, False)
-
-    # if current spring is "." (operational)
-    if curr == ".":
-        # counting the rest springs
-        if must_operational:
-            return get_possible_count(rest, groups, 0, False)
-
-        # counting the rest springs
-        if prev_size == 0:
-            return get_possible_count(rest, groups, 0, False)
-        else:
-            # check current size against the group
-            if prev_size != groups[0]:
-                return 0  # if not match, impossible
-            else:
-                # if match, clear the prev size, next spring can't be operational, counting the rest springs
-                return get_possible_count(rest, groups[1:], 0, False)
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

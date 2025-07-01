@@ -1,88 +1,121 @@
 import sys
 
+UP = "^"
+DOWN = "v"
+LEFT = "<"
+RIGHT = ">"
 
 
-def part1( data):
-    start = (0, 0)
-    d = 0
-    return calc(data, start, d)
+def traverse(
+    matrix: list[list[str]],
+    start: tuple[int, int],
+    direction: str,
+    beans: set[tuple[int, int, str]],
+):
+    i, j = start
+    if i < 0 or i >= len(matrix) or j < 0 or j >= len(matrix[i]):
+        return
 
-def part2( data):
-    h = len(data)
-    w = len(data[0])
-    results = []
+    if (i, j, direction) in beans:
+        return
+    beans.add((i, j, direction))
 
-    for y in range(h):
-        for x in range(w):
-            # check if it's on the edge
-            if y not in [0, h - 1] and x not in [0, w - 1]:
-                continue
+    if matrix[i][j] == "|":
+        if direction in (LEFT, RIGHT):
+            traverse(matrix, (i - 1, j), UP, beans)
+            traverse(matrix, (i + 1, j), DOWN, beans)
+        if direction == UP:
+            traverse(matrix, (i - 1, j), UP, beans)
+        elif direction == DOWN:
+            traverse(matrix, (i + 1, j), DOWN, beans)
+        return
 
-            init_d = []
+    if matrix[i][j] == "-":
+        if direction in (UP, DOWN):
+            traverse(matrix, (i, j - 1), LEFT, beans)
+            traverse(matrix, (i, j + 1), RIGHT, beans)
+        if direction == LEFT:
+            traverse(matrix, (i, j - 1), LEFT, beans)
+        elif direction == RIGHT:
+            traverse(matrix, (i, j + 1), RIGHT, beans)
+        return
 
-            if y == 0:
-                init_d.append(1)
-            elif y == h - 1:
-                init_d.append(3)
+    if matrix[i][j] == "\\":
+        if direction == UP:
+            traverse(matrix, (i, j - 1), LEFT, beans)
+        elif direction == DOWN:
+            traverse(matrix, (i, j + 1), RIGHT, beans)
+        elif direction == LEFT:
+            traverse(matrix, (i - 1, j), UP, beans)
+        elif direction == RIGHT:
+            traverse(matrix, (i + 1, j), DOWN, beans)
+        return
 
-            if x == 0:
-                init_d.append(0)
-            elif x == w - 1:
-                init_d.append(2)
+    if matrix[i][j] == "/":
+        if direction == UP:
+            traverse(matrix, (i, j + 1), RIGHT, beans)
+        elif direction == DOWN:
+            traverse(matrix, (i, j - 1), LEFT, beans)
+        elif direction == LEFT:
+            traverse(matrix, (i + 1, j), DOWN, beans)
+        elif direction == RIGHT:
+            traverse(matrix, (i - 1, j), UP, beans)
+        return
 
-            for d in init_d:
-                results.append(calc(data, (y, x), d))
+    while (
+        i >= 0
+        and i < len(matrix)
+        and j >= 0
+        and j < len(matrix[i])
+        and matrix[i][j] == "."
+    ):
+        beans.add((i, j, direction))
+        if direction == RIGHT:
+            j += 1
+        elif direction == LEFT:
+            j -= 1
+        elif direction == UP:
+            i -= 1
+        elif direction == DOWN:
+            i += 1
 
-    return max(results)
+    traverse(matrix, (i, j), direction, beans)
 
-def calc( data, start, init_d):
-    # start = (0, 0)
-    q = [(start, init_d)]  # (position, direction)
-    visited = set()
-    dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # right, down, left, up
 
-    h = len(data)
-    w = len(data[0])
+def part1(text: str) -> int:
+    matrix = [[c for c in line] for line in text.splitlines()]
+    beans = set()
+    traverse(matrix, (0, 0), RIGHT, beans)
+    unique_beans = set()
+    for i, j, _ in beans:
+        unique_beans.add((i, j))
+    return len(unique_beans)
 
-    while q:
-        pos, d = q.pop(0)
 
-        if (pos, d) in visited:
-            continue
-        visited.add((pos, d))
+def energize(matrix: list[list[str]], start: tuple[int, int], direction: str):
+    beans = set()
+    traverse(matrix, start, direction, beans)
+    return len(set((i, j) for i, j, _ in beans))
 
-        _next_d = []
-        curr = data[pos[0]][pos[1]]
 
-        if curr == ".":
-            _next_d.append(d)
-        elif curr == "\\":
-            # _next_d.append([1, 0, 3, 2][d])
-            _next_d.append(d + (-1) ** d)
-        elif curr == "/":
-            # _next_d.append([3, 2, 1, 0][d])
-            _next_d.append(3 - d)
-        elif curr == "-":
-            if d % 2:
-                _next_d.append((d + 1) % 4)
-                _next_d.append((d + 3) % 4)
-            else:
-                _next_d.append(d)
-        elif curr == "|":
-            if d % 2:
-                _next_d.append(d)
-            else:
-                _next_d.append((d + 1) % 4)
-                _next_d.append((d + 3) % 4)
+def part2(text: str) -> int:
+    matrix = [[c for c in line] for line in text.splitlines()]
+    result = 0
+    for i in range(len(matrix)):
+        r = energize(matrix, (i, 0), RIGHT)
+        result = max(result, r)
+        r = energize(matrix, (i, len(matrix[i]) - 1), LEFT)
+        result = max(result, r)
 
-        for _d in _next_d:
-            y, x = (pos[0] + dirs[_d][0], pos[1] + dirs[_d][1])
-            if 0 <= y < h and 0 <= x < w and ((y, x), _d) not in visited:
-                q.append(((y, x), _d))
+    for j in range(len(matrix[0])):
+        r = energize(matrix, (0, j), DOWN)
+        result = max(result, r)
+        r = energize(matrix, (len(matrix) - 1, j), UP)
+        result = max(result, r)
 
-    return len(set(pos for pos, _ in visited))
+    return result
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

@@ -1,32 +1,44 @@
 import sys
-from functools import reduce
+
+def part1(text: str) -> int:
+    total = 0
+    for word in text.strip().split(","):
+        subtotal = 0
+        for c in word:
+            subtotal = ((subtotal + ord(c)) * 17) % 256
+        total += subtotal
+
+    return total
+
+def get_hash(word: str) -> int:
+    total = 0
+    for c in word:
+        total = ((total + ord(c)) * 17) % 256
+    return total
 
 
-def part1( data):
-    data = data[0].split(",")
-    return sum(calc_hash(item) for item in data)
-
-def part2( data):
-    data = data[0].split(",")
+def part2(text: str) -> int:
     boxes = [{} for _ in range(256)]
 
-    for line in data:
-        if "=" in line:
-            label, value = line.split("=")
-            box_id = calc_hash(label)
-            boxes[box_id][label] = int(value)
+    for word in text.strip().split(","):
+        if "=" in word:
+            label, focall = word.split("=")
+            box_i = get_hash(label)
+            boxes[box_i][label] = int(focall)
         else:
-            label = line[:-1]
-            box_id = calc_hash(label)
-            if label in boxes[box_id]:
-                del boxes[box_id][label]
+            label = word.split("-")[0]
+            box_i = get_hash(label)
+            boxes[box_i].pop(label, None)
 
-    power = 0
-    for box_id1, box in enumerate(boxes, 1):
-        for slot_id, lens in enumerate(box.items(), 1):
-            power += box_id1 * slot_id * lens[1]
+    total = 0
+    for box_i, box in enumerate(boxes):
+        for label_i, (label, focall) in enumerate(box.items()):
+            total += (box_i + 1) * (label_i + 1) * focall
+    return total
 
-    return power
 
-def calc_hash( item):
-    return reduce(lambda acc, c: (acc + ord(c)) * 17 % 256, item, 0)
+
+inout_strings = sys.argv[1]
+with open(inout_strings) as f:
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")

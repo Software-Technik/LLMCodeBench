@@ -24,11 +24,8 @@ def part1(data):
         moved = not np.array_equal(before, board1)
     return count
 
-def part2(data):
-    return "There_is_no_part_2"
-
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
     data = f.read().splitlines()
 
-sys.stdout.write(f"{part1(data)} {part2(data)}")
+sys.stdout.write(f"{part1(data)}")

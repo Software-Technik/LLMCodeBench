@@ -1,59 +1,51 @@
+from queue import PriorityQueue
 import sys
-from heapq import heappop, heappush
+import numpy as np
 
-
-def part1( data):
-    return find_path(data, 1, 3)
-
-def part2( data):
-    return find_path(data, 4, 10)
-
-def find_path(data, minimum_step_before_turn=1, maximum_consecutive_steps=3):
-    h = len(data)
-    w = len(data[0])
-    start = (0, 0)
-    end = (h - 1, w - 1)
-
-    dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
-    visited = {}  # {(pos, d): loss}
-    q = [(0, start, -1, 0)]  # (loss, pos, dir, dir_continious)
-    # losses = []
-    """
-    Since I switched to using heapq, there's no need to store every loss.
-    However, I've kept it as a comment in the code as a reminder(?) of how I came up with the solution.
-    """
+def navigate(grid, minval, maxval):
+    q = PriorityQueue()
+    max_y, max_x = (v - 1 for v in grid.shape)
+    goal = max_y, max_x
+    q.put((0, (0, 0, 0)))
+    q.put((0, (0, 0, 1)))
+    seen = set()
 
     while q:
-        loss, pos, d, dc = heappop(q)
-        if pos == end:
-            return loss
-            # losses.append(loss)
-            # continue
+        cost, (y, x, direction) = q.get()
+        if (y, x) == goal:
+            break
+        if (y, x, direction) in seen:
+            continue
+        seen.add((y, x, direction))
+        original_cost = cost
+        for s in [-1, 1]:
+            cost = original_cost
+            new_y, new_x = y, x
+            for i in range(1, maxval + 1):
+                if direction == 1:
+                    new_x = x + i * s
+                else:
+                    new_y = y + i * s
+                if new_x < 0 or new_y < 0 or new_x > max_x or new_y > max_y:
+                    break
+                cost += grid[new_y, new_x]
+                if ((new_y, new_x, 1 - direction)) in seen:
+                    continue
+                if i >= minval:
+                    q.put((cost, (new_y, new_x, 1 - direction)))
+    return cost
 
-        """
-        find allowed directions:
 
-        already listed all possible steps in the current direction before,
-        so there's no need to repeat them (in the same direction)
-        just added all possible steps to the left or right of the current position
-        """
-        allowed_dirs = [_d for _d in range(4) if _d != d and (_d + 2) % 4 != d]
 
-        for _d in allowed_dirs:
-            _next_loss = loss
-            for d_cont in range(1, maximum_consecutive_steps + 1):
-                _next_pos = tuple(a + b * d_cont for a, b in zip(pos, dirs[_d]))
-                if 0 <= _next_pos[0] < h and 0 <= _next_pos[1] < w:
-                    _next_loss += int(data[_next_pos[0]][_next_pos[1]])
-                    if _next_loss < visited.get((_next_pos, _d), float("inf")):
-                        visited[(_next_pos, _d)] = _next_loss
-                        if d_cont >= minimum_step_before_turn:
-                            heappush(q, (_next_loss, _next_pos, _d, d_cont))
+def part1(data):
+    grid = np.array([[int(char) for char in line.strip()] for line in data])
+    return navigate(grid, minval=1, maxval=3)
 
-    # return min(losses)
+def part2(data):
+    grid = np.array([[int(char) for char in line.strip()] for line in data])
+    return navigate(grid, minval=4, maxval=10)
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
     data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+sys.stdout.write(f"{part1(data)} {part2(data)}")

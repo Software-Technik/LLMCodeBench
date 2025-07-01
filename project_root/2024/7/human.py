@@ -21,7 +21,6 @@ def part1(lines):
 
         for combo in product("*+", repeat=len(nums) - 1):
             if test(combo) == value:
-                print(f"[{i:02}/{len(lines)}] WORKS", combo, value)
                 ans += value
                 break
 
@@ -49,7 +48,6 @@ def part2(lines):
 
         for combo in product("*+|", repeat=len(nums) - 1):
             if test(combo) == value:
-                print(f"[{i:02}/{len(lines)}] WORKS", combo, value)
                 ans += value
                 break
 

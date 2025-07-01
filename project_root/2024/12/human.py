@@ -21,8 +21,6 @@ def part1(grid):
             stack = [(i, j)]
             plots.append([grid[i][j], []])
 
-            print(f"looking at i={i}, j={j}, grid[i][j]={grid[i][j]}")
-
             while len(stack) > 0:
                 ci, cj = stack.pop()
                 if (ci, cj) in seen:
@@ -56,7 +54,6 @@ def part1(grid):
 
     ans = 0
     for c, plot in plots:
-        print(c, plot, perim(plot))
         ans += perim(plot) * len(plot)
 
     return ans
@@ -137,6 +134,7 @@ def part2(grid):
         ans += perim(plot) * len(plot)
 
     return ans
+
 
 input_path = sys.argv[1]
 

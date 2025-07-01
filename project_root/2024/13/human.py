@@ -33,8 +33,6 @@ def part1(lines):
 
 
 def part2(lines):
-    with open("./day_13.in") as fin:
-        lines = fin.read().strip().split("\n\n")
 
     def parse(x):
         lines = x.split("\n")

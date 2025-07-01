@@ -1,52 +1,27 @@
-# Program to multiply two matrices using Python taking User Input
-A = []
-B = []
+import sys
 
-# Open the input file
-with open('input', 'r') as f:
-    lines = f.readlines()
+def part1(data):
+    sum = 0
 
-# Read matrix A
-index = 0
-n = int(lines[index].strip())
-index += 1
-for i in range(n):
-    row = list(map(int, lines[index].strip().split()))
-    A.append(row)
-    index += 1
+    for line in data: 
+        sum += int(line) // 3 - 2
 
-# Read matrix B
-m = int(lines[index].strip())
-index += 1
-for i in range(m):
-    row = list(map(int, lines[index].strip().split()))
-    B.append(row)
-    index += 1
+    return sum
 
-# Display A
-print("Matrix A:")
-for row in A:
-    print(" ".join(map(str, row)))
+def fuelFor(input):
+  output = input // 3 - 2
+  return 0 if output <= 0 else output + fuelFor(output)
 
-# Display B
-print("\nMatrix B:")
-for row in B:
-    print(" ".join(map(str, row)))
-# [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-#Display the 2D array
-print("Display Array In Matrix Form:")
-for i in range(n):
-   for j in range(n):
-      print(B[i][j], end=" ")
-   print()                                           
-result = [[0,0,0], [0,0,0], [0,0,0]] 
-for i in range(len(A)): 
-   for j in range(len(B[0])): 
-      for k in range(len(B)): 
-         result[i][j] += A[i][k] * B[k][j] 
-print("The Resultant Sum Matrix Is ::>")
-with open('solution', 'w') as f:
-    for r in result:
-        line = " ".join(map(str, r))
-        print(line)          # print to screen
-        f.write(line + '\n')  # write to file
+def part2(data):
+    sum = 0
+
+    for line in data: 
+        sum += fuelFor(int(line))
+
+    return sum
+
+inout_strings = sys.argv[1]
+with open(inout_strings) as f:
+    data = [line.strip() for line in f if line.strip()]
+
+sys.stdout.write(f"{part1(data)} {part2(data)}")   

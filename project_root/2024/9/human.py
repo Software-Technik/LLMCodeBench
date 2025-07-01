@@ -1,132 +1,118 @@
 import sys
 
 
-def part1(line):
+def part1(disk_map):
 
-    def make_filesystem(diskmap):
-        blocks = []
+    # Parse the disk map into segments
+    disk_segments = []
+    for i in range(0, len(disk_map), 2):
+        file_length = int(disk_map[i])
+        free_length = int(disk_map[i + 1]) if i + 1 < len(disk_map) else 0
+        disk_segments.append(("file", file_length))
+        if free_length > 0:
+            disk_segments.append(("free", free_length))
 
-        is_file = True
-        id = 0
-        for x in diskmap:
-            x = int(x)
-            if is_file:
-                blocks += [id] * x
-                id += 1
-                is_file = False
-            else:
-                blocks += [None] * x
-                is_file = True
+    # Build disk representation
+    blocks = []
+    file_id = 0
+    for segment, length in disk_segments:
+        if segment == "file":
+            blocks.extend([file_id] * length)
+            file_id += 1
+        else:
+            blocks.extend(["."] * length)
 
-        return blocks
+    # Compact the disk
+    left_walker, right_walker = 0, len(blocks) - 1
+    while left_walker < right_walker:
+        while left_walker < len(blocks) and blocks[left_walker] != ".":
+            left_walker += 1
+        while right_walker >= 0 and blocks[right_walker] == ".":
+            right_walker -= 1
+        if left_walker < right_walker:
+            blocks[left_walker], blocks[right_walker] = (
+                blocks[right_walker],
+                blocks[left_walker],
+            )
 
-    filesystem = make_filesystem(line)
+    # Calculate checksum
+    checksum = 0
+    for i in range(len(blocks)):
+        if blocks[i] != ".":
+            checksum += i * blocks[i]
 
-    def move(arr):
-        first_free = 0
-        while arr[first_free] != None:
-            first_free += 1
-
-        i = len(arr) - 1
-        while arr[i] == None:
-            i -= 1
-
-        while i > first_free:
-            arr[first_free] = arr[i]
-            arr[i] = None
-            while arr[i] == None:
-                i -= 1
-            while arr[first_free] != None:
-                first_free += 1
-
-        return arr
-
-    def checksum(arr):
-        ans = 0
-        for i, x in enumerate(arr):
-            if x != None:
-                ans += i * x
-        return ans
-
-    ans = checksum(move(filesystem))
-    return ans
+    return checksum
 
 
-def part2(line):
+def part2(disk_map):
 
-    # Allocate a lot of space
-    size = [0] * len(line)
-    loc = [0] * len(line)
+    # Parse the disk map into segments
+    disk_segments = []
+    for i in range(0, len(disk_map), 2):
+        file_length = int(disk_map[i])
+        free_length = int(disk_map[i + 1]) if i + 1 < len(disk_map) else 0
+        disk_segments.append(("file", file_length))
+        if free_length > 0:
+            disk_segments.append(("free", free_length))
 
-    def make_filesystem(diskmap):
-        global loc, size
+    # Build disk representation
+    blocks = []
+    file_positions = []  # Metadata for each file: its start position, length, and ID
+    file_id = 0
+    pos = 0
+    for segment, length in disk_segments:
+        if segment == "file":
+            blocks.extend([file_id] * length)
+            file_positions.append((pos, length, file_id))
+            pos += length
+            file_id += 1
+        else:
+            blocks.extend([None] * length)
+            pos += length
 
-        blocks = []
+    # Aggregate free spaces into list of tuples
+    free_spaces = []
+    current_pos = 0
+    while current_pos < len(blocks):
+        if blocks[current_pos] is None:
+            start = current_pos
+            while current_pos < len(blocks) and blocks[current_pos] is None:
+                current_pos += 1
+            free_spaces.append((start, current_pos - start))
+        current_pos += 1
 
-        is_file = True
-        id = 0
-        for x in diskmap:
-            x = int(x)
-            if is_file:
-                loc[id] = len(blocks)
-                size[id] = x
-                blocks += [id] * x
-                id += 1
-                is_file = False
-            else:
-                blocks += [None] * x
-                is_file = True
+    # Move files to the leftmost valid space
+    file_count = len(file_positions)
+    space_count = len(free_spaces)
+    for file_index in range(
+        (file_count - 1), -1, -1
+    ):  # Iterate through file_positions in reverse order
+        start_pos, file_size, file_id = file_positions[file_index]
+        for space_index in range(space_count):  # Iterate through free_spaces normally
+            space_pos, space_size = free_spaces[space_index]
+            if space_pos < start_pos and file_size <= space_size:
+                # Move the file
+                for j in range(file_size):
+                    blocks[start_pos + j] = None
+                    blocks[space_pos + j] = file_id
+                # Update free space
+                free_spaces[space_index] = (
+                    space_pos + file_size,
+                    space_size - file_size,
+                )
+                break
 
-        return blocks
+    # Calculate checksum
+    checksum = 0
+    for i, block in enumerate(blocks):
+        if block is not None:
+            checksum += i * block
 
-    filesystem = make_filesystem(line)
-
-    def move(arr):
-        # Current file to move
-        big = 0
-        while size[big] > 0:
-            big += 1
-        big -= 1
-
-        for to_move in range(big, -1, -1):
-            # Find first free space that works
-            free_space = 0
-            first_free = 0
-            while first_free < loc[to_move] and free_space < size[to_move]:
-                first_free = first_free + free_space
-                free_space = 0
-                while arr[first_free] != None:
-                    first_free += 1
-                while (
-                    first_free + free_space < len(arr)
-                    and arr[first_free + free_space] == None
-                ):
-                    free_space += 1
-
-            if first_free >= loc[to_move]:
-                continue
-
-            # Move file by swapping block values
-            for idx in range(first_free, first_free + size[to_move]):
-                arr[idx] = to_move
-            for idx in range(loc[to_move], loc[to_move] + size[to_move]):
-                arr[idx] = None
-
-        return arr
-
-    def checksum(arr):
-        ans = 0
-        for i, x in enumerate(arr):
-            if x != None:
-                ans += i * x
-        return ans
-
-    moved = move(filesystem)
-
-    return checksum(moved)
+    return checksum
 
 
 input_path = sys.argv[1]
-with open(input_path) as fin:
-    line = fin.read().strip()
-    print(part1(line), part2(line))
+
+with open(input_path, "r") as file:
+    disk_map = file.read().strip()
+    print(part1(disk_map), part2(disk_map))

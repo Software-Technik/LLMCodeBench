@@ -1,48 +1,52 @@
 import sys
-import math
+from functools import reduce
+from operator import mul
 
 
 
-def part1( data):
-    thresholds = {"red": 12, "green": 13, "blue": 14}
-    possibles = 0
+def is_possible(game_data: str, setup={"red": 12, "green": 13, "blue": 14}) -> bool:
+    for game_set in game_data.split(";"):
+        cubes_data = game_set.strip().split(",")
+        for cube_data in cubes_data:
+            n, color = cube_data.strip().split(maxsplit=1)
+            n = int(n)
+            if n > setup[color]:
+                return False
+    return True
 
-    for line in data:
-        game_info, sets = line.split(": ")
-        groups = map(str.split, sets.replace(";", ",").split(", "))
-        if all(int(cube_nums) <= thresholds[cube_color] for cube_nums, cube_color in groups):
-            possibles += int(game_info.split(" ")[1])
 
-    """
-    # one-liner
-    possibles = sum(i * all(int(cube_nums) <= thresholds[cube_color] for cube_nums, cube_color in map(str.split, line.split(": ")[1].replace(";", ",").split(", "))) for i, line in enumerate(data, 1))
-    """
+def part1(text: str, setup={"red": 12, "green": 13, "blue": 14}) -> int:
+    total = 0
+    for i, line in enumerate(text.splitlines(), start=1):
+        _, game_data = line.split(":", maxsplit=1)
+        if is_possible(game_data.strip(), setup):
+            total += i
+    return total
 
-    return possibles
+def get_power(game_data: str) -> int:
+    min_cubes_number = {}
+    for game_set in game_data.split(";"):
+        cubes_data = game_set.strip().split(",")
+        for cube_data in cubes_data:
+            n, color = cube_data.strip().split(maxsplit=1)
+            n = int(n)
+            min_cubes_number.setdefault(color, n)
+            if n > min_cubes_number[color]:
+                min_cubes_number[color] = n
+    return reduce(mul, min_cubes_number.values())
 
-def part2(data):
-    _sum = 0
 
-    for line in data:
-        counts = {"red": 0, "green": 0, "blue": 0}
+def part2(text: str) -> int:
+    total = 0
+    for line in text.splitlines():
+        _, game_data = line.split(":", maxsplit=1)
+        power = get_power(game_data.strip())
+        total += power
+    return total
 
-        _, sets = line.split(": ")
-        sets = sets.split("; ")
-
-        for _set in sets:
-            _set = {k: int(v) for v, k in map(str.split, _set.split(", "))}
-            counts = {k: max(v, _set.get(k, 0)) for k, v in counts.items()}
-        _sum += math.prod(counts.values())
-
-    """
-    # one-liner
-    _sum = sum(math.prod([max(map(lambda s: s.get(color, 0), [{k: int(v) for v, k in map(str.split, _set.split(", "))} for _set in line.split(": ")[1].split("; ")])) for color in ("red", "green", "blue")]) for line in data)
-    """
-
-    return _sum
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    data = f.read()
+sys.stdout.write(f"{part1(data)} {part2(data)}")
 

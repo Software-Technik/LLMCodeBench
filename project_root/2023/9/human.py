@@ -1,54 +1,66 @@
 import sys
 
-def part1(data):
-    res = 0
+def get_pascal_triangle_row(row):
+    current_row = [1]
+    for i in range(1, row + 1):
+        new_row = [1]
+        for j in range(i - 1):
+            a = current_row[j]
+            b = current_row[j + 1]
+            new_row.append(a + b)
+        new_row.append(1)
+        current_row = new_row
+    return current_row
 
-    for line in data:
-        history = [*map(int, line.split())]
-        diff = [b - a for a, b in zip(history, history[1:])]
 
-        seqs = [history, diff]
-        check = sum(1 for i in diff if i)
+def part1(text: str) -> int:
+    """
+    The solutions follow a pattern found in the Pascal triangle,
+    with each number alternating between adding and subtracting.
+    This solves the problem in linear time.
+    """
+    lines = text.splitlines()
+    lines = [list(map(int, line.split())) for line in lines]
 
-        while check:
-            next_diff = [b - a for a, b in zip(diff, diff[1:])]
-            seqs.append(next_diff)
-            diff = next_diff
-            check = sum(1 for i in diff if i)
+    n = len(lines[0])
+    values = get_pascal_triangle_row(n)
 
-        next_value = 0
-        for seq in seqs[::-1]:
-            next_value += seq[-1]
+    total = 0
+    for line in lines:
+        add = len(line) % 2 != 0
+        for a, b in zip(line, values):
+            r = a * b
+            if add:
+                total += r
+            else:
+                total -= r
+            add = not add
+    return total
 
-        res += next_value
+def part2(text: str) -> int:
+    """Same as 09.py, but with the values reversed :shrug:"""
+    lines = text.splitlines()
+    lines = [list(map(int, line.split()[::-1])) for line in lines]
 
-    return res
+    n = len(lines[0])
+    values = get_pascal_triangle_row(n)
 
-def part2(data):
-    res = 0
+    total = 0
+    for line in lines:
+        add = len(line) % 2 != 0
+        for a, b in zip(line, values):
+            r = a * b
+            if add:
+                total += r
+            else:
+                total -= r
+            add = not add
+    return total
 
-    for line in data:
-        history = [*map(int, line.split())]
-        diff = [b - a for a, b in zip(history, history[1:])]
 
-        seqs = [history, diff]
-        check = sum(1 for i in diff if i)
 
-        while check:
-            next_diff = [b - a for a, b in zip(diff, diff[1:])]
-            seqs.append(next_diff)
-            diff = next_diff
-            check = sum(1 for i in diff if i)
-
-        next_value = 0
-        for seq in seqs[::-1]:
-            next_value = seq[0] - next_value
-
-        res += next_value
-
-    return res
 
 inout_strings = sys.argv[1]
 with open(inout_strings) as f:
-    data = [line.strip() for line in f if line.strip()]
-sys.stdout.write(str([part1(data), part2(data)]))
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")
