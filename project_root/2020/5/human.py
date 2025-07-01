@@ -4,7 +4,7 @@ input_path = sys.argv[1]
 
 lines = []
 with open(input_path) as f:
-    # with open("input.txt") as f:
+# with open(r"project_root\2020\5\input.txt") as f:
     data = f.read()
     lines = data.splitlines()
 # print(lines)
@@ -56,4 +56,5 @@ for idx, id in enumerate(sort):
 rg = range(min(ids), max(ids))
 # print(set(rg) - set(ids))  # {619}
 result2 = set(rg) - set(ids)
+result2=", ".join(str(x) for x in result2)
 print(result1, result2)

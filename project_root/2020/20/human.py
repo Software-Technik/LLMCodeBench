@@ -12,8 +12,8 @@ input_path = sys.argv[1]
 
 input_file = input_path
 # input_file = r"project_root\2020\advent-of-code-2020-master\20\input.txt"
-if "s" in sys.argv:
-    input_file = "input_small.txt"
+# if "s" in sys.argv:
+#     input_file = "input_small.txt"
 try:
     with open(input_file) as f:
         data = f.read()  # entire file as string
@@ -297,7 +297,17 @@ coordinates = dict()
 
 # hardcode and place a top right value
 # chose this one because it does not require any pre-rotation
-TOPRIGHT_ID = 3067
+topright_tile = None
+max_x = -float('inf')
+max_y = -float('inf')
+
+for tile_id, (x, y) in positions.items():
+    if (x > max_x) or (x == max_x and y > max_y):
+        max_x = x
+        max_y = y
+        topright_tile = tile_id
+
+TOPRIGHT_ID = topright_tile
 positions[TOPRIGHT_ID] = (11, 0, 0)
 coordinates[(11, 0)] = (TOPRIGHT_ID, 0)
 

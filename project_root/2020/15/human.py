@@ -82,7 +82,7 @@ while True:
 
     if turn == 2020:
         ans(to_speak)  # 1325
-        print(to_speak)
+        # print(to_speak)
         result1 = to_speak
 
         # break
