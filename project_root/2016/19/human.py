@@ -1,23 +1,18 @@
 import numpy as np
 import sys
 
-INPUT = 3018458
 
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r')  as file:
-    INPUT = int(file.read().strip())
-
-def find_elf(elves):
+def part1(elves):
     if len(elves) <= 2:
         return elves[0] + 1
 
     if len(elves) % 2:
-        return find_elf(np.roll(elves[::2], 1))
+        return part1(np.roll(elves[::2], 1))
     else:
-        return find_elf(elves[::2])
+        return part1(elves[::2])
 
 
-def new_rules(elves):
+def part2(elves):
     n = len(elves)
     if n <= 2:
         return elves[0] + 1
@@ -30,9 +25,10 @@ def new_rules(elves):
         removed = n - n//3
         new = np.roll(elves, -across)[2::3]
 
-    return new_rules(np.roll(new, across-removed))
+    return part2(np.roll(new, across-removed))
 
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    data = int(file.read().strip())
 
-elf_circle = np.arange(INPUT)
-
-print(find_elf(elf_circle), new_rules(elf_circle))
+sys.stdout.write(f"{part1(np.arange(data))} {part2(np.arange(data))}")  

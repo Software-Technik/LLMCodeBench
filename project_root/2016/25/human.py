@@ -49,4 +49,4 @@ while True:
         break
     i += 1
 
-print(i)
+sys.stdout.write(f"{i}")  

@@ -1,8 +1,4 @@
 import sys
-inout_strings = sys.argv[1]
-
-with open(inout_strings, 'r') as infile:
-    INSTRUCTIONS = infile.read().split('\n')
 
 
 class Scrambler:
@@ -83,6 +79,10 @@ class Scrambler:
     def unscramble(self):
         return self.scramble(-1)
 
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r') as infile:
+    INSTRUCTIONS = infile.read().split('\n')
+
 
 plain = list('abcdefgh')
 hashed = list('fbgdceah')
@@ -90,4 +90,4 @@ hashed = list('fbgdceah')
 first_part = Scrambler(plain).scramble()
 second_part = Scrambler(hashed).unscramble()
 
-print(first_part, second_part)
+sys.stdout.write(f"{first_part} {second_part}")  

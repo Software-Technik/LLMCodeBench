@@ -244,4 +244,4 @@ def part2(lines):
 
 if __name__ == '__main__':
     lines = load_input(INPUTFILE)
-    print(part1(lines), part2(lines))
+    sys.stdout.write(f"{part1(lines)} {part2(lines)}")  

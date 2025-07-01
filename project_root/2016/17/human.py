@@ -5,10 +5,6 @@ import sys
 
 #INPUT = 'bwnlcvfs'
 
-inout_strings = sys.argv[1]
-with open(inout_strings, 'r')  as file:
-    INPUT = file.read().strip()
-
 VAULT = 3+3j
 
 
@@ -36,7 +32,10 @@ def find_vault():
 
     return solutions[0], len(solutions[-1])
 
+inout_strings = sys.argv[1]
+with open(inout_strings, 'r')  as file:
+    INPUT = file.read().strip()
 
 first, second = find_vault()
 
-print(first, second)
+sys.stdout.write(f"{first} {second}")  

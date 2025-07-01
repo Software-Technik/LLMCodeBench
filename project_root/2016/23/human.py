@@ -63,4 +63,4 @@ def execute(a):
         i += 1
     return register['a']
 
-print(execute(a=7), execute(a=12))
+sys.stdout.write(f"{execute(a=7)} {execute(a=12)}")  
