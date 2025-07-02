@@ -18,7 +18,7 @@ deepseek_client = OpenAI(
 )
 ollama_client = OpenAI(base_url="http://localhost:11434/v1")
 ollama_model = (
-    os.environ["OLLAMA_MODEL"] if "OLLAMA_MODEL" in os.environ else "devtral:24b"
+    os.environ["OLLAMA_MODEL"] if "OLLAMA_MODEL" in os.environ else "devstral:24b"
 )
 
 PROMPT = """

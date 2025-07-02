@@ -2,11 +2,12 @@ import sys
 import subprocess
 import time
 import psutil
-import csv
+import sqlite3
 from pathlib import Path
 import os
 
 TIMEOUT_SECONDS = 120
+DB_PATH = "results.db"
 
 
 def read_file(path):
@@ -104,34 +105,41 @@ def get_input_and_solution_paths(py_file):
     return input_path, solution_path
 
 
-def write_result_row(row, write_header=False):
-    header = [
-        "Filename",
-        "Runtime in ms",
-        "Peak Memory Usage in kb",
-        "Output",
-        "Expected Solution",
-        "Correct",
-        "Error Message",
-    ]
-    file_exists = os.path.exists("./results.csv")
-    with open("./results.csv", "a", newline="", encoding="utf-8") as csvfile:
-        writer = csv.writer(csvfile)
-        if write_header and not file_exists:
-            writer.writerow(header)
-        if row:  # Nur schreiben, wenn row nicht leer ist
-            writer.writerow(row)
+def init_db(db_path=DB_PATH):
+    if os.path.exists(db_path):
+        os.remove(db_path)  # Clean start
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE results (
+            filename TEXT PRIMARY KEY,
+            runtime_ms REAL,
+            peak_mem_kb REAL,
+            output TEXT,
+            expected_solution TEXT,
+            correct TEXT,
+            error_message TEXT
+        )
+    """)
+    conn.commit()
+    return conn
+
+
+def insert_result(conn, row):
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO results (
+            filename, runtime_ms, peak_mem_kb, output,
+            expected_solution, correct, error_message
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, row)
+    conn.commit()
 
 
 def main():
     print("Starting evaluation")
-    results_csv_path = "./results.csv"
-    # Datei am Anfang löschen, damit sie immer frisch ist
-    if os.path.exists(results_csv_path):
-        os.remove(results_csv_path)
-    # Schreibe Header
-    write_result_row([], write_header=True)
-    for file_path in find_python_files("../project_root/2015"):
+    conn = init_db()
+    for file_path in find_python_files("../project_root"):
         input_path, solution_path = get_input_and_solution_paths(file_path)
         if not input_path.exists() or not solution_path.exists():
             print(f"Input or solution missing for {file_path}, skipping...")
@@ -147,39 +155,18 @@ def main():
 
         row = [
             str(file_path).split("../project_root/")[1],
-            run_time,
-            avg_mem_usage,
+            float(run_time),
+            float(avg_mem_usage),
             output,
             expected_solution,
             "YES" if correct else "NO",
             error_message,
         ]
-        write_result_row(row)
+        insert_result(conn, row)
 
-
-def sort_csv_by_filename(csv_path):
-    with open(csv_path, newline="", encoding="utf-8") as f:
-        reader = list(csv.reader(f))
-        header = reader[0]
-        rows = reader[1:]
-
-    def sort_key(row):
-        filename = row[0]
-        parts = filename.split("/")
-        year = int(parts[0])
-        day = int(parts[1])
-        rest = "/".join(parts[2:])
-        return (year, day, rest)
-
-    rows.sort(key=sort_key)
-
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(rows)
+    conn.close()
+    print(f"finished, results stored in {DB_PATH}")
 
 
 if __name__ == "__main__":
     main()
-    sort_csv_by_filename("./results.csv")
-    print("finished, results stored in ./results.csv")

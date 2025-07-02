@@ -27,7 +27,7 @@ def process_human_py(human_py):
             [sys.executable, str(human_py), str(input_path)],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=600
         )
     except Exception as e:
         return (year_day, f"{year_day}: Exception: {e}")
