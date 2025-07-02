@@ -219,7 +219,7 @@ def part2(data):
     inputs = [y, x] # IntCode requires a stack of commands, not a queue!
     runner = runComputer2(data, inputs)
 
-    print(inputs)
+    #print(inputs)
     status = next(runner, 'halt')
     if status == 'halt': break
 
@@ -242,7 +242,7 @@ def part2(data):
     answer = findanswer2(level)
     if answer: break
 
-  draw2(level, False)
+  #draw2(level, False)
 
   return answer
 
@@ -250,4 +250,4 @@ inout_strings = sys.argv[1]
 with open(inout_strings) as f:
     data = list(map(int, f.read().splitlines()[0].split(",")))
 
-sys.stdout.write(f"{part2(data.copy())} {part2(data.copy())}")
+sys.stdout.write(f"{part1(data.copy())} {part2(data.copy())}")

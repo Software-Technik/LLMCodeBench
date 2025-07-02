@@ -1,26 +1,18 @@
 import sys
 import z3
 
-# Values from "input" file
-V = [
-    [1, 12, 1],
-    [1, 12, 1],
-    [1, 15, 16],
-    [26, -8, 5],
-    [26, -4, 9],
-    [1, 15, 3],
-    [1, 14, 2],
-    [1, 14, 15],
-    [26, -13, 5],
-    [26, -3, 11],
-    [26, -7, 7],
-    [1, 10, 1],
-    [26, -6, 10],
-    [26, -8, 3],
-]
+def parse_parameters(lines):
+    V = []
+    for i in range(0, len(lines), 18):  # Jeder Block hat 18 Zeilen
+        block = lines[i:i + 18]
+        div_z = int(block[4].split()[-1])
+        add_x = int(block[5].split()[-1])
+        add_y = int(block[15].split()[-1])
+        V.append((div_z, add_x, add_y))
+    return V
 
 
-def Solver():
+def Solver(V):
     solver = z3.Optimize()
     var = [z3.Int(f"s_{i}") for i in range(14)]
     for i in range(14):
@@ -37,20 +29,22 @@ def Solver():
 
 def part1(data):
     # Part 1
-    solver, var = Solver()
+    parsedParams = parse_parameters(data)
+    solver, var = Solver(parsedParams)
     solver.maximize(sum([v * 10 ** (13 - i) for i, v in enumerate(var)]))
     solver.check()
     m = solver.model()
-    return [m[x] for x in var]
+    return int("".join(str(m[x]) for x in var))
 
 
 def part2(data):
     # Part 2
-    solver, var = Solver()
+    parsedParams = parse_parameters(data)
+    solver, var = Solver(parsedParams)
     solver.minimize(sum([v * 10 ** (13 - i) for i, v in enumerate(var)]))
     solver.check()
     m = solver.model()
-    return [m[x] for x in var]
+    return int("".join(str(m[x]) for x in var))
 
 
 inout_strings = sys.argv[1]

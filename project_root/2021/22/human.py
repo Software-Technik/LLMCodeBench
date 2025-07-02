@@ -67,7 +67,7 @@ def part2(data):
     total = 0
     d = np.array([dy]).T * np.array([dz])
     for i in range(grid.shape[0]):
-        total += dx[i] * np.sum(grid[i, :, :] * d)
+        total += dx[i] * int(np.sum(grid[i, :, :] * d, dtype=np.int64))
     return total
 
 inout_strings = sys.argv[1]
