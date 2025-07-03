@@ -1,6 +1,87 @@
-# LLMCodeBench
+# LLMCodeBench 
+
+## ⚙️ Pre-Start Setup
+
+Bevor du das Projekt nutzen kannst, führe bitte folgende Schritte durch:
+
+### 1. Virtuelle Umgebung erstellen
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Auf Windows: .venv\Scripts\activate
+```
+
+### 2. Abhängigkeiten installieren
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. .env variablen setzen
+
+Erstelle eine `.env`-Datei im Ordner `data_setup/` mit folgendem Inhalt:
+
+```env
+# Für OpenAI
+OPENAI_API_KEY=dein_openai_api_key
+
+# Für DeepSeek
+DEEPSEEK_API_KEY=dein_deepseek_api_key
+
+# Für Advent of Code – Session Cookie (aus dem Browser kopieren)
+AOC_SESSION_COOKIE=dein_session_token
+
+# Das Ollama model angeben welches mit geteset werden soll in unserem fall devstral:24b
+OLLAMA_MODEL="devstral:24b"
+```
+
+> Du benötigst ein **Advent of Code Benutzerkonto** und musst eingeloggt sein, um dein Session-Token aus dem Browser zu extrahieren.  
+---
+
+## Part 1 – Datengenerierung
+
+Hier werden Eingabedateien und Referenzlösungen zu allen Advent-of-Code-Tagen erstellt:
+
+```bash
+python data_setup/main.py --init
+```
+
+Dies erzeugt:
+- Aufgaben-Eingaben (Input-Files)
+- Menschliche Referenzlösungen zur Validierung
+---
+
+## Part 2 – Codegenerierung durch LLMs
+
+Du kannst die folgenden Flags einzeln oder kombiniert verwenden:
+
+```bash
+python data_setup/main.py --openai
+python data_setup/main.py --deepseek
+python data_setup/main.py --ollama
+
+# Oder kombiniert:
+python data_setup/main.py --openai --deepseek
+```
+---
+
+## Phase 3 – Evaluation
+
+In der Evaluationsphase werden alle Lösungen (human + LLM) getestet und analysiert:
+
+```bash
+python evaluation/main.py
+```
+
+---
+
 
 ## Projektkomponenten
+
+1. **Virtuelle Umgebung erstellen**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Auf Windows: .venv\Scripts\activate
 
 ### Data setup
 
