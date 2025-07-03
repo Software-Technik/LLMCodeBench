@@ -1,0 +1,11 @@
+data_setup/.env
+.config-env
+__pycache__/
+*.pyc
+*.pyc
+data_setup/solution_errors.txt
+data_setup/logs/
+**/env/
+**/.env/
+**/venv/
+**/.venv/
