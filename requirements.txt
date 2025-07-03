@@ -31,3 +31,4 @@ psutil
 pandas
 plotly
 tabulate
+sympy
