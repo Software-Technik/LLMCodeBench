@@ -2,6 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
 
 ERROR_LOG = "./logs/execution_errors.txt"
 PROJECT_ROOT = "../project_root"
@@ -61,6 +62,7 @@ def check_files(py_files, max_workers=4):
                 errors.append((rel_path, error_msg))
 
     errors.sort()
+    os.makedirs(os.path.dirname(ERROR_LOG), exist_ok=True)
     with open(ERROR_LOG, "w", encoding="utf-8") as f:
         for _, msg in errors:
             f.write(msg + "\n")
