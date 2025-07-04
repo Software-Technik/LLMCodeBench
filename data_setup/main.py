@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import argparse
+from pathlib import Path
 
 INPUT_CRAWLER_PATH = "./input_crawler.py"
 CODE_SYNTAX_CHECKER_PATH = "./code_syntax_checker.py"
@@ -60,7 +61,21 @@ def llm_gen_and_validate(args):
         subprocess.run([sys.executable, CODE_SYNTAX_CHECKER_PATH])
 
 
+def prepare_output_dirs():
+    print("Preparing output directories (Ollama, OpenAI, DeepSeek)...")
+    base_dir = Path("../project_root")
+    for year_dir in base_dir.iterdir():
+        if not year_dir.is_dir():
+            continue
+        for day_dir in year_dir.iterdir():
+            if not day_dir.is_dir():
+                continue
+            for name in ["Ollama", "OpenAI", "DeepSeek"]:
+                output_dir = day_dir / name
+                output_dir.mkdir(parents=True, exist_ok=True)
+
 def main(args):
+    prepare_output_dirs()
     if args.init:
         run_input_crawler()
         run_solution_generator()
