@@ -5,7 +5,5 @@ __pycache__/
 *.pyc
 data_setup/solution_errors.txt
 data_setup/logs/
-**/env/
-**/.env/
 **/venv/
 **/.venv/
