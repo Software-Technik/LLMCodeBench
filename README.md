@@ -22,10 +22,7 @@
    cd ./data_setup
    ```
 
-5. .env-Datei vorbereiten:  
-   Die Datei `.example.env` muss in `.env` umbenannt werden. Für diesen Arbeitsschritt wird ausschließlich `OLLAMA_MODEL="devstral:24b"` verwendet. Alle anderen Werte können leer bleiben.
-
-6. LLM-Generierung starten:
+5. LLM-Generierung starten:
    ```bash
    python main.py --ollama
    ```
