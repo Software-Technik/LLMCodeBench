@@ -1,0 +1,23 @@
+import sys
+
+def part1(data):
+    r = 0
+    for line in data:
+        s1, s2 = (tuple(map(int, section.split("-"))) for section in line.split(","))
+        if (s1[0] - s2[0]) * (s1[1] - s2[1]) <= 0:
+            r += 1
+    return r
+
+def part2(data):
+    r = 0
+    for line in data:
+        s1, s2 = (tuple(map(int, section.split("-"))) for section in line.split(","))
+        if s2[0] <= s1[0] <= s2[1] or s1[0] <= s2[0] <= s1[1]:
+            r += 1
+    return r
+
+input_strings = sys.argv[1]
+with open(input_strings) as f:
+    data = [line.strip() for line in f]
+
+sys.stdout.write(f"{part1(data)}\n{part2(data)}\n")
