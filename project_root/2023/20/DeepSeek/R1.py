@@ -1,0 +1,136 @@
+import sys
+import math
+from functools import reduce
+from collections import deque
+
+class Module:
+    def __init__(self, name, destinations):
+        self.name = name
+        self.destinations = destinations
+
+    def recv(self, source, signal):
+        return []
+
+    def reset(self):
+        pass
+
+    def instantiate_destinations(self, modules):
+        new_dests = []
+        for dest in self.destinations:
+            if isinstance(dest, str):
+                if dest in modules:
+                    new_dests.append(modules[dest])
+                else:
+                    new_dests.append(Module(dest, []))
+            else:
+                new_dests.append(dest)
+        self.destinations = new_dests
+
+class FlipFlop(Module):
+    def __init__(self, name, destinations):
+        super().__init__(name, destinations)
+        self.state = 0
+
+    def recv(self, source, signal):
+        if signal == 0:
+            self.state ^= 1
+            return [(self.name, dest, self.state) for dest in self.destinations]
+        return []
+
+    def reset(self):
+        self.state = 0
+
+class Conjunction(Module):
+    def __init__(self, name, destinations, sources):
+        super().__init__(name, destinations)
+        self.signals = {src: 0 for src in sources}
+
+    def recv(self, source, signal):
+        self.signals[source] = signal
+        output_signal = 0 if all(self.signals.values()) else 1
+        return [(self.name, dest, output_signal) for dest in self.destinations]
+
+    def reset(self):
+        for key in self.signals:
+            self.signals[key] = 0
+
+class Broadcaster(Module):
+    def recv(self, source, signal):
+        return [(self.name, dest, signal) for dest in self.destinations]
+
+def strip_prefix(name):
+    return name[1:] if name[0] in "%&" else name
+
+def parse_network(text):
+    lines = text.strip().splitlines()
+    network = {}
+    modules = {}
+
+    for line in lines:
+        source, dests = line.split(" -> ")
+        network[source] = dests.split(", ")
+
+    for key in network:
+        if key.startswith("%"):
+            modules[key[1:]] = FlipFlop(key[1:], network[key])
+        elif key.startswith("&"):
+            sources = [strip_prefix(k) for k in network if key[1:] in network[k]]
+            modules[key[1:]] = Conjunction(key[1:], network[key], sources)
+        elif key == "broadcaster":
+            modules["broadcaster"] = Broadcaster("broadcaster", network[key])
+
+    for mod in modules.values():
+        mod.instantiate_destinations(modules)
+
+    return network, modules
+
+def part1(text):
+    _, modules = parse_network(text)
+    counts = [0, 0]
+
+    for _ in range(1000):
+        queue = deque([("button", modules["broadcaster"], 0)])
+        while queue:
+            source, dest_module, signal = queue.popleft()
+            counts[signal] += 1
+            queue.extend(dest_module.recv(source, signal))
+
+    return counts[0] * counts[1]
+
+def lcm(a, b):
+    return abs(a * b) // math.gcd(a, b)
+
+def lcm_all(nums):
+    return reduce(lcm, nums)
+
+def part2(text):
+    _, modules = parse_network(text)
+    rx_input = None
+    for name, mod in modules.items():
+        for dest in mod.destinations:
+            if dest.name == "rx":
+                rx_input = mod.name
+    inputs_to_rx_input = [
+        name for name, mod in modules.items()
+        if rx_input in [d.name for d in mod.destinations]
+    ]
+
+    seen = {}
+    i = 0
+    while len(seen) < len(inputs_to_rx_input):
+        queue = deque([("button", modules["broadcaster"], 0)])
+        while queue:
+            source, dest_module, signal = queue.popleft()
+            if dest_module.name == rx_input and signal == 1 and source in inputs_to_rx_input:
+                if source not in seen:
+                    seen[source] = i + 1
+            new_events = dest_module.recv(source, signal)
+            queue.extend(new_events)
+        i += 1
+
+    return lcm_all(seen.values())
+
+inout_strings = sys.argv[1]
+with open(inout_strings) as f:
+    text = f.read()
+sys.stdout.write(f"{part1(text)} {part2(text)}")
